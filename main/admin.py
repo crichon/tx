@@ -33,15 +33,37 @@ class OrderAdmin(admin.ModelAdmin):
 
 class OrderItemsAdmin(admin.ModelAdmin):
 
-    fields = (u'order_data', u'item', u'needed', u'state', u'for_user',)
-    readonly_fields = (u'order_data',)
+    #fields = (u'order_data', u'item', u'needed', u'state', u'for_user',)
+    # readonly_fields = (u'order_data',)
+
+    def get_form(self, request, obj=None, **kwargs):
+        self.exclude = []
+        self.readonly_fields = []
+        if obj == None:
+            self.exclude.append(u'order_data')
+            self.exclude.append(u'state')
+        else:
+            self.readonly_fields.append(u'order_data')
+            self.readonly_fields.append(u'state')
+        # Heu, just followed the docs on this one, but don\'t know wth this is
+        self.exclude.append(u'user')
+        return super(OrderItemsAdmin, self).get_form(request, obj, **kwargs)
 
     def save_model(self, request, obj, form, change):
-        """add for_user and user to item orderring"""
+        """
+        override save OrderItems
+
+        - add for_user and user
+        - if new, add it to the last order
+        """
         obj.user = request.user
-        if not obj.user:
+        if not obj.for_user:
             obj.for_user = request.user
+
+        if change == False:
+            obj.order_data = Order.objects.get(state__startswith=u'en cours')
         obj.save()
+    # check if state change and if all orderItems are stocked -> archive order
 
 
 admin.site.register(Category)
