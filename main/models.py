@@ -51,10 +51,10 @@ order_state = (
 
 class Order(models.Model):
     order = models.ManyToManyField(Item, through='OrderItems')
-    state = models.CharField(u'état', max_length=50, choices=order_state)
-    create_date = models.DateTimeField(u'date de création')
-    order_date = models.DateTimeField(u'date d\'envoie de la commande', null=True, blank=True)
-    reception_date = models.DateTimeField(u'Date de réception de la commande', null=True, blank=True)
+    state = models.CharField(u'état', max_length=50, choices=order_state, default=order_state[0])
+    create_date = models.DateField(u'date de création', auto_now_add=True)
+    order_date = models.DateField(u'date d\'envoie de la commande', null=True, blank=True)
+    reception_date = models.DateField(u'Date de réception de la commande', null=True, blank=True)
 
     def __unicode__(self):
         return 'commande du ' + self.create_date.strftime('%d/%m/%Y') + u', ' + self.state
@@ -70,14 +70,15 @@ item_state = (
         (u'en attente de réception', u'en attente de réception'),
 )
 
+
 class OrderItems(models.Model):
-    order_data = models.ForeignKey(Order, verbose_name=u'commande')
+    order_data = models.ForeignKey(Order, verbose_name=u'commande', default=Order.objects.latest('create_date'))
     item = models.ForeignKey(Item, verbose_name=u'objet')
     needed = models.IntegerField(verbose_name=u'quantité à commander', default=0)
     state = models.CharField(verbose_name=u'état', max_length=50, choices=item_state, default=item_state[0])
     for_user = models.ForeignKey(User, related_name=u'OrderItems_for_user', verbose_name=u'pour') # related name needed to help django manage multiple foreign keys on the same table
     user = models.ForeignKey(User, verbose_name=u'utilisateur')
-    # add by user for (other user or null) the (date)
+    last_edited = models.DateField(u'date de création', auto_now=True)
 
     def __unicode__(self):
         return self.item.name + u', quantité: ' + str(self.needed)
