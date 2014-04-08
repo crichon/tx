@@ -31,8 +31,8 @@ Vue publique
 
 Si temps, voir du coté de d3.js pour faire des visualisations sur les consommations du labo
 
-Qui serait éventuellement sympa à implémenter
----------------------------------------------
+Qui serait éventuellement
+-------------------------
 
 Gérer les prix, le labo n'est pas intéresser donc ...
 

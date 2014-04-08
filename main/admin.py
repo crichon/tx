@@ -12,21 +12,30 @@ class OrderAdmin(admin.ModelAdmin):
     fields = (u'state', u'create_date', u'order_date', u'reception_date',)
     readonly_fields = (u'create_date', u'order_date', u'reception_date',)
 
+    #def get_form(self, request, obj=None, **kwargs):
+    #    """ override form or even disable admin right to change cmd by hand, use action """
+    #    pass
+
     def save_model(self, request, obj, form, change):
         """ if state change to:
             - drop -> create a new order
             - backup -> create a new order
             - done -> create a new order, split items by supplier, generate pdf and send them via mail
         """
+        print obj.state
+        print obj.state == (order_state[2][0] or order_state[3][0])
         if change == True:
-            if obj.state == order_state[2][0] or order_date[3][0]:
+            if obj.state == (order_state[2][0] or order_state[3][0]):
                 # save current order and create a new one
                 new_order = Order()
+                new_order.state = order_state[0][0]
                 new_order.save()
                 obj.save()
-                if obj.state == order[3][0]:
+                if obj.state == order_state[3][0]:
                     # if order just been submitted, create xls
                     create_xls(obj)
+            else:
+                obj.save()
         else:
             obj.save()
 
@@ -44,7 +53,9 @@ class OrderItemsAdmin(admin.ModelAdmin):
             self.exclude.append(u'state')
         else:
             self.readonly_fields.append(u'order_data')
-            self.readonly_fields.append(u'state')
+            if obj.order_data.state == order_state[0][0] or order_state[1][0]:
+                self.readonly_fields.append(u'state')
+
         # Heu, just followed the docs on this one, but don\'t know wth this is
         self.exclude.append(u'user')
         return super(OrderItemsAdmin, self).get_form(request, obj, **kwargs)
@@ -62,6 +73,7 @@ class OrderItemsAdmin(admin.ModelAdmin):
 
         if change == False:
             obj.order_data = Order.objects.get(state__startswith=u'en cours')
+            obj.state = item_state[0][0]
         obj.save()
     # check if state change and if all orderItems are stocked -> archive order
 
