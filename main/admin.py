@@ -58,14 +58,11 @@ class OrderAdmin(admin.ModelAdmin):
     actions = [export_xls]
     fields = (u'state', u'create_date', u'order_date', u'reception_date',)
     readonly_fields = (u'create_date', u'order_date', u'reception_date',)
-<<<<<<< HEAD
-=======
 
     #def get_form(self, request, obj=None, **kwargs):
     #    """ override form or even disable admin right to change cmd by hand, use action """
     #    pass
 
->>>>>>> 128a86dbb346d244d7895cc74ca8260003fd851e
     def save_model(self, request, obj, form, change):
         """ if state change to:
             - drop -> create a new order
