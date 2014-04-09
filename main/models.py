@@ -50,7 +50,7 @@ order_state = (
 )
 
 class Order(models.Model):
-    order = models.ManyToManyField(Item, through='OrderItems')
+    items = models.ManyToManyField(Item, through='OrderItems')
     state = models.CharField(u'état', max_length=50, choices=order_state, default=order_state[0])
     create_date = models.DateField(u'date de création', auto_now_add=True)
     order_date = models.DateField(u'date d\'envoie de la commande', null=True, blank=True)
@@ -68,6 +68,7 @@ item_state = (
         (u'anulée', u'annulée'),
         (u'stocké', u'stocké'),
         (u'en attente de réception', u'en attente de réception'),
+        (u'manquant', u'manquant'),
 )
 
 
@@ -75,14 +76,15 @@ class OrderItems(models.Model):
     order_data = models.ForeignKey(Order, verbose_name=u'commande')
     item = models.ForeignKey(Item, verbose_name=u'objet')
     needed = models.IntegerField(verbose_name=u'quantité à commander', default=0)
-    state = models.CharField(verbose_name=u'état', max_length=50, choices=item_state, default=item_state[0])
-    for_user = models.ForeignKey(User, related_name=u'OrderItems_for_user', verbose_name=u'pour', blank=True) # related name needed to help django manage multiple foreign keys on the same table
+    state = models.CharField(verbose_name=u'état', max_length=50, choices=item_state)
+    for_user = models.ForeignKey(User, related_name=u'OrderItems_for_user', verbose_name=u'pour', blank=True, null=True) # related name needed to help django manage multiple foreign keys on the same table
     user = models.ForeignKey(User, verbose_name=u'utilisateur')
     last_edited = models.DateField(u'date de création', auto_now=True)
 
     def __unicode__(self):
-        return self.item.name + u', quantité: ' + str(self.needed) + u' ' + self.user.get_username()
+        return self.item.name + u', quantité: ' + str(self.needed) + u' ' + self.user.get_username() + u':' + self.state + u' / ' + self.order_data.__unicode__()
 
     class Meta:
         verbose_name = u'Commande de produit'
+        unique_together= (u'item', u'order_data',)
 
