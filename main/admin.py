@@ -5,13 +5,15 @@ from main.models import *
 
 def create_xls(obj):
     pass
+def export_xls(modeladmin, request, queryset):
 
+    pass
 
 class OrderAdmin(admin.ModelAdmin):
-
+    actions = [export_xls]
     fields = (u'state', u'create_date', u'order_date', u'reception_date',)
     readonly_fields = (u'create_date', u'order_date', u'reception_date',)
-
+    admin.site.register(Order, OrderAdmin)
     def save_model(self, request, obj, form, change):
         """ if state change to:
             - drop -> create a new order
