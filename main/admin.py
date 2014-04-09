@@ -1,19 +1,60 @@
 # -*- coding: utf8 -*-
 from django.contrib import admin
 from main.models import *
-
+import time
+import pdb
+from django.http import HttpResponse
 
 def create_xls(obj):
     pass
-def export_xls(modeladmin, request, queryset):
+def export_xls(ModelAdmin, request, queryset):
+    import xlwt
+    response = HttpResponse(mimetype='application/ms-excel')
+    response['Content-Disposition'] = 'attachment; filename=commande - '+time.strftime("%d/%m/%Y")+'.xls'
+    wb = xlwt.Workbook(encoding='utf-8')
+    #For each categorie create sheet
+    ws = wb.add_sheet("Commande")
 
-    pass
+    row_num = 0
+    columns = [
+            (u"Type de produit", 5000),
+            (u"Identification", 12000),
+            (u"Volume/Qté", 5000),
+            (u"Référence", 5000),
+            (u"Fournisseur", 5000),
+            ]
+    font_style = xlwt.XFStyle()
+    font_style.font.bold = True
+    #Set titles
+    for col_num in xrange(len(columns)):
+        ws.write(row_num, col_num, columns[col_num][0], font_style)
+        # set column width
+        ws.col(col_num).width = columns[col_num][1]
+
+    font_style = xlwt.XFStyle()
+    font_style.alignment.wrap = 1
+
+    for obj in queryset[0].order.order_by('supplier'):
+        row_num += 1
+        row = [
+                obj.category.name,
+                obj.name,
+                obj.quantity,
+                obj.ref,
+                obj.supplier.name,
+                ]
+        for col_num in xrange(len(row)):
+            ws.write(row_num, col_num, row[col_num], font_style)
+
+        wb.save(response)
+        return response
+
+export_xls.short_description = u"Export XLS"
 
 class OrderAdmin(admin.ModelAdmin):
     actions = [export_xls]
     fields = (u'state', u'create_date', u'order_date', u'reception_date',)
     readonly_fields = (u'create_date', u'order_date', u'reception_date',)
-    admin.site.register(Order, OrderAdmin)
     def save_model(self, request, obj, form, change):
         """ if state change to:
             - drop -> create a new order
