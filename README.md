@@ -36,8 +36,11 @@ Qui serait éventuellement
 
 Gérer les prix, le labo n'est pas intéresser donc ...
 
-Todo (dsl écris suite à une session code...)
+Todo 
 --------------------------------------------
+dsl écris suite à une session code...
+
+Merci taskwarrior ;)
 
     ID Proj Pri Due        Age Urg  Description
     -- ---- --- ---------- --- ---- ------------------------------------------------
