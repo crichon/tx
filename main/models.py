@@ -50,7 +50,7 @@ order_state = (
 )
 
 class Order(models.Model):
-    order = models.ManyToManyField(Item, through='OrderItems')
+    items = models.ManyToManyField(Item, through='OrderItems')
     state = models.CharField(u'état', max_length=50, choices=order_state, default=order_state[0])
     create_date = models.DateField(u'date de création', auto_now_add=True)
     order_date = models.DateField(u'date d\'envoie de la commande', null=True, blank=True)

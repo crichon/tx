@@ -22,10 +22,9 @@ class OrderAdmin(admin.ModelAdmin):
             - backup -> create a new order
             - done -> create a new order, split items by supplier, generate pdf and send them via mail
         """
-        print obj.state
-        print obj.state == (order_state[2][0] or order_state[3][0])
+        print order_state[3][0]
         if change == True:
-            if obj.state == (order_state[2][0] or order_state[3][0]):
+            if obj.state == order_state[2][0] or obj.state == order_state[3][0]:
                 # save current order and create a new one
                 new_order = Order()
                 new_order.state = order_state[0][0]
