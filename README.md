@@ -36,3 +36,25 @@ Qui serait éventuellement
 
 Gérer les prix, le labo n'est pas intéresser donc ...
 
+Todo (dsl écris suite à une session code...)
+--------------------------------------------
+
+    ID Proj Pri Due        Age Urg  Description
+    -- ---- --- ---------- --- ---- ------------------------------------------------
+    40 tx       2014-04-08 1d  11.5 finnish OrderAdmin save method
+    43 tx   M   2014-04-24 16m 7.31 deploy somwhere
+    46 tx   M   2014-04-24 9m   7.3 install bootstrap-admin
+    47 tx   M   2014-04-24 8m   7.3 check for nicer list display
+    49 tx   M   2014-04-24 8m   7.3 init database with a new current order
+    50 tx   M   2014-04-24 7m   7.3 fix order_state and item_state, should be
+                                    model.choiceField and not model.charField
+    51 tx   M   2014-04-24 6m   7.3 rethink state logic to be as simple and clear as
+                                    possible
+    53 tx   M   2014-04-24 3m   7.3 override admin given choices in order to avoid
+                                    possibilities of breaking state logic
+    44 tx   L   2014-04-24 15m  5.2 mail 5000 python host
+    45 tx   L   2014-04-24 14m  5.2 mail smdie pythoon hosting
+    48 tx   L   2014-04-24 8m   5.2 automate or save user and groups rights
+    52 tx   L   2014-04-24 5m   5.2 think about database backup and license
+
+    12 tasks

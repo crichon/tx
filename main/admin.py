@@ -1,15 +1,18 @@
 # -*- coding: utf8 -*-
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import admin
-from django.shortcuts import redirect
-from django.db import IntegrityError, transaction
-from main.models import *
-import time
-import pdb
 from django.http import HttpResponse
+from django import forms
+
+from main.models import *
+
+import time
+
 
 def create_xls(obj):
     pass
+
+
 def export_xls(ModelAdmin, request, queryset):
     import xlwt
     response = HttpResponse(mimetype='application/ms-excel')
@@ -54,14 +57,12 @@ def export_xls(ModelAdmin, request, queryset):
 
 export_xls.short_description = u"Export XLS"
 
+
 class OrderAdmin(admin.ModelAdmin):
     actions = [export_xls]
     fields = (u'state', u'create_date', u'order_date', u'reception_date',)
     readonly_fields = (u'create_date', u'order_date', u'reception_date',)
 
-    #def get_form(self, request, obj=None, **kwargs):
-    #    """ override form or even disable admin right to change cmd by hand, use action """
-    #    pass
 
     def save_model(self, request, obj, form, change):
         """ if state change to:
@@ -86,7 +87,6 @@ class OrderAdmin(admin.ModelAdmin):
             obj.save()
 
 
-from django import forms
 class ItemForms(forms.ModelForm):
     class Meta:
         model=OrderItems
@@ -126,36 +126,16 @@ class OrderItemsAdmin(admin.ModelAdmin):
         """
         override save OrderItems
 
-        - check if not already in the current order ?? (needed)
         - add for_user and user
         - if new, add it to the last order
         """
-#        try:
-#            current_order = Order.objects.get(state__startswith=u'en cours')
-#        except ObjectDoesNotExist:
-# init
-#            current_order = Order()
-#            current_order.state = order_state[0][0]
-#            current_order.save()
-
         current_order = Order.objects.get(state__startswith=u'en cours')
-        obj.user = request.user #
+        obj.user = request.user
         if not obj.for_user:
             obj.for_user = request.user
         if change == False:
             obj.order_data = current_order
             obj.state = item_state[0][0]
-
-#        if obj.item in current_order.items.all():
-#            self.message_user(request, u'%s est déjà dans la facture courante, veuillez plutôt l\'éditer' % obj.item, u'error')
-#            try:
-#                with transaction.atomic():
-#                    obj.save()
-#            except IntegrityError:
-#                redirect('/admin/main/orderitems') # ugly
-#            print "fuck"
-#        else:
-#            print "fuckit"
         obj.save()
     # check if state change and if all orderItems are stocked -> archive order
 
