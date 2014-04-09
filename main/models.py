@@ -68,6 +68,7 @@ item_state = (
         (u'anulée', u'annulée'),
         (u'stocké', u'stocké'),
         (u'en attente de réception', u'en attente de réception'),
+        (u'manquant', u'manquant'),
 )
 
 
@@ -81,8 +82,9 @@ class OrderItems(models.Model):
     last_edited = models.DateField(u'date de création', auto_now=True)
 
     def __unicode__(self):
-        return self.item.name + u', quantité: ' + str(self.needed) + u' ' + self.user.get_username() + u'/ ' + self.order_data.__unicode__()
+        return self.item.name + u', quantité: ' + str(self.needed) + u' ' + self.user.get_username() + u':' + self.state + u' / ' + self.order_data.__unicode__()
 
     class Meta:
         verbose_name = u'Commande de produit'
+        unique_together= (u'item', u'order_data',)
 
