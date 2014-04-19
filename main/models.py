@@ -42,47 +42,84 @@ class Item(models.Model):
         return self.name
 
 
-order_state = (
-        (u'en cours', u'en cours'),
-        (u'archivée', u'archivée'),
-        (u'anulée', u'annulée'),
-        (u'en attente', u'en attente de réception'),
-)
-
 class Order(models.Model):
+
+    CURRENT = u'CU'
+    DONE = u'D'
+    CANCELED = u'CA'
+    WAITING = u'W'
+    GET = u'G'
+
+    ORDER_STATE = (
+            (CURRENT, u'en cours'),
+            (DONE, u'archivée'),
+            (CANCELED, u'annulée'),
+            (WAITING, u'en attente de réception'),
+            (GET, u'reçue'),
+    )
+
     items = models.ManyToManyField(Item, through='OrderItems')
-    state = models.CharField(u'état', max_length=50, choices=order_state, default=order_state[0])
+    state = models.CharField(u'état', max_length=50, choices=ORDER_STATE, default=CURRENT)
     create_date = models.DateField(u'date de création', auto_now_add=True)
     order_date = models.DateField(u'date d\'envoie de la commande', null=True, blank=True)
     reception_date = models.DateField(u'Date de réception de la commande', null=True, blank=True)
 
     def __unicode__(self):
-        return 'commande du ' + self.create_date.strftime('%d/%m/%Y') + u', ' + self.state
+        return 'commande du ' + self.create_date.strftime('%d/%m/%Y') + u', ' + self.get_state_display()
 
     class Meta:
         verbose_name = u'Commande'
 
 
-item_state = (
-        (u'en attente de validation', u'en attente de validation'),
-        (u'anulée', u'annulée'),
-        (u'stocké', u'stocké'),
-        (u'en attente de réception', u'en attente de réception'),
-        (u'manquant', u'manquant'),
-)
-
-
 class OrderItems(models.Model):
+
+    CURRENT = u'CU'
+    DONE = u'D'
+    CANCELED = u'CA'
+    WAITING = u'W'
+    GET = u'G'
+    MISSING = u'M'
+
+    ITEM_STATE = (
+            (CURRENT, u'en attente de validation'),
+            (CANCELED, u'annulée'),
+            (DONE, u'stocké'),
+            (WAITING, u'en attente de réception'),
+            (MISSING, u'manquant'),
+            (GET, u'reçu, à stocker'),
+    )
+
     order_data = models.ForeignKey(Order, verbose_name=u'commande')
     item = models.ForeignKey(Item, verbose_name=u'objet')
     needed = models.IntegerField(verbose_name=u'quantité à commander', default=0)
-    state = models.CharField(verbose_name=u'état', max_length=50, choices=item_state)
+    state = models.CharField(verbose_name=u'état', max_length=50, choices=ITEM_STATE)
     for_user = models.ForeignKey(User, related_name=u'OrderItems_for_user', verbose_name=u'pour', blank=True, null=True) # related name needed to help django manage multiple foreign keys on the same table
     user = models.ForeignKey(User, verbose_name=u'utilisateur')
     last_edited = models.DateField(u'date de création', auto_now=True)
 
     def __unicode__(self):
-        return self.item.name + u', quantité: ' + str(self.needed) + u' ' + self.user.get_username() + u':' + self.state + u' / ' + self.order_data.__unicode__()
+        return self.item.name + u', quantité: ' + str(self.needed) + u' ' + self.user.get_username() + u':' + self.get_state_display() + u' / ' + self.order_data.__unicode__()
+
+
+    def save(self, *args, **kwargs):
+        """ modify Order state depending on collections state
+        if all items has been treated, mark order as done """
+        super(OrderItems, self).save(*args, **kwargs)
+        done = True
+        if self.order_data.orderitems_set.all():
+            for item in self.order_data.orderitems_set.all():
+                print item.state
+                if item.state not in (self.CANCELED, self.DONE, self.MISSING):
+                    print item
+                    done = False
+        else:
+            print "heu ?"
+            done = False
+        if done:
+            print "wtf"
+            self.order_data.state = Order.DONE
+            self.order_data.save()
+
 
     class Meta:
         verbose_name = u'Commande de produit'

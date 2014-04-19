@@ -8,6 +8,9 @@ from main.models import *
 
 import time
 
+ORDER_CURRENT = (Order.ORDER_STATE[2], Order.ORDER_STATE[3])
+ORDER_WAITING = (Order.ORDER_STATE[2], Order.ORDER_STATE[4])
+
 
 def create_xls(obj):
     pass
@@ -22,13 +25,13 @@ def export_xls(ModelAdmin, request, queryset):
     ws = wb.add_sheet("Commande")
 
     row_num = 0
-    columns = [
+    columns = (
             (u"Type de produit", 5000),
             (u"Identification", 12000),
             (u"Volume/Qté", 5000),
             (u"Référence", 5000),
             (u"Fournisseur", 5000),
-            ]
+            )
     font_style = xlwt.XFStyle()
     font_style.font.bold = True
     #Set titles
@@ -54,45 +57,88 @@ def export_xls(ModelAdmin, request, queryset):
 
         wb.save(response)
         return response
-
 export_xls.short_description = u"Export XLS"
+
+
+class OrderFormCurrent(forms.ModelForm):
+    def __init__(self,  *args, **kwargs):
+        super(OrderFormCurrent, self).__init__(*args, **kwargs)
+        self.fields[u'state'] = forms.ChoiceField(choices=ORDER_CURRENT)
+
+
+class OrderFormWaiting(forms.ModelForm):
+    def __init__(self,  *args, **kwargs):
+        super(OrderFormWaiting, self).__init__(*args, **kwargs)
+        self.fields[u'state'] = forms.ChoiceField(choices=ORDER_WAITING)
 
 
 class OrderAdmin(admin.ModelAdmin):
     actions = [export_xls]
-    fields = (u'state', u'create_date', u'order_date', u'reception_date',)
-    readonly_fields = (u'create_date', u'order_date', u'reception_date',)
 
+    def get_form(self, request, obj=None, **kwargs):
+        """ Handle the choice given to the administator on the state's choices
+
+        current -> *canceled or waiting
+        waiting -> canceld or *get
+
+        other transition are handeld in self.save()
+        *see below*
+        except for done which is handeld by OrderItems.save() on state_change
+        """
+        # self.fields = [u'state', u'create_date', u'order_date', u'reception_date']
+        self.readonly_fields = [u'create_date', u'order_date', u'reception_date']
+
+        if not obj == None:
+            if obj.state == Order.CURRENT:
+                self.form = OrderFormCurrent
+            elif obj.state == Order.WAITING:
+                self.form = OrderFormWaiting
+            else:
+                self.readonly_fields.append(u'state')
+
+        return super(OrderAdmin, self).get_form(request, obj, **kwargs)
 
     def save_model(self, request, obj, form, change):
         """ if state change to:
-            - drop -> create a new order
-            - backup -> create a new order
-            - done -> create a new order, split items by supplier, generate pdf and send them via mail
+            - canceled, waiting -> create a new order
+            - canceled -> mark OrderItems as canceled
+            - waiting -> generate command
+            - get -> mark OrderItems as get
         """
-        print order_state[3][0]
         if change == True:
-            if obj.state == order_state[2][0] or obj.state == order_state[3][0]:
+            if obj.state == Order.CANCELED or obj.state == Order.WAITING:
                 # save current order and create a new one
                 new_order = Order()
-                new_order.state = order_state[0][0]
+                new_order.state = Order.CURRENT
                 new_order.save()
-                obj.save()
-                if obj.state == order_state[3][0]:
-                    # if order just been submitted, create xls
+                if obj.state == Order.WAITING:
+                    #order just been submitted
                     create_xls(obj)
-            else:
-                obj.save()
-        else:
-            obj.save()
+                    for item in obj.orderitems_set.all():
+                        item.state = OrderItems.WAITING
+                        item.save()
+                else:
+                    # order is canceled
+                    for item in obj.orderitems_set.all():
+                        print item
+                        print type(item)
+                        print item.state
+                        item.state = OrderItems.CANCELED
+                        item.save()
+            elif obj.state == Order.GET:
+                for item in obj.orderitems_set.all():
+                    item.state = OrderItems.GET
+                    item.save()
+        obj.save()
 
 
 class ItemForms(forms.ModelForm):
+
     class Meta:
         model=OrderItems
 
     def clean(self):
-        order = Order.objects.get(state__startswith=u'en cours')
+        order = Order.objects.get(state__startswith=Order.CURRENT)
         if self.cleaned_data['item'] in order.items.all():
             msg = u'%s est déjà dans la facture courante, veuillez sélectionnez un autre produit' % self.cleaned_data['item']
             raise forms.ValidationError(msg)
@@ -100,11 +146,14 @@ class ItemForms(forms.ModelForm):
 
 
 class OrderItemsAdmin(admin.ModelAdmin):
+    """ Handles Items addition and actions
+    user action, copy to current order
+    items action, available when a command has arrived, mark as * """
 
     form = ItemForms
     #fields = (u'order_data', u'item', u'needed', u'state', u'for_user',)
     # readonly_fields = (u'order_data',)
-    actions = [u'copy_items', u'mark_as_stock', u'mark_as_missing']
+    actions = [u'copy_items', u'mark_as_stock', u'mark_as_missing', u'mark_as_canceled']
     list_filter = (u'for_user', 'state', u'order_data')
 
     def get_form(self, request, obj=None, **kwargs):
@@ -118,7 +167,7 @@ class OrderItemsAdmin(admin.ModelAdmin):
             self.readonly_fields.append(u'item')
             self.readonly_fields.append(u'state')
 
-        # Heu, just followed the docs on this one, but don\'t know wth this is
+        # Heu, just followed the docs on this one, but don\'t know wtf this is
         self.exclude.append(u'user')
         return super(OrderItemsAdmin, self).get_form(request, obj, **kwargs)
 
@@ -129,26 +178,25 @@ class OrderItemsAdmin(admin.ModelAdmin):
         - add for_user and user
         - if new, add it to the last order
         """
-        current_order = Order.objects.get(state__startswith=u'en cours')
         obj.user = request.user
         if not obj.for_user:
             obj.for_user = request.user
         if change == False:
+            current_order = Order.objects.get(state__startswith=Order.CURRENT)
             obj.order_data = current_order
-            obj.state = item_state[0][0]
+            obj.state = OrderItems.CURRENT
         obj.save()
-    # check if state change and if all orderItems are stocked -> archive order
 
     def copy_items(self, request, queryset):
         """ copy selected items to current order """
-        current_order = Order.objects.get(state__startswith=u'en cours')
+        current_order = Order.objects.get(state__startswith=Order.CURRENT)
         i = 0
         for obj in queryset:
             if obj.order_data == current_order or obj.item in current_order.items.all():
                 self.message_user(request, u'%s est déjà dans la facture courante, veuillez plutôt l\'éditer' % obj.item, u'error')
             else:
                 item = OrderItems()
-                item.state = item_state[0][0]
+                item.state = OrderItems.CURRENT
                 item.needed = obj.needed
                 item.for_user = obj.for_user
                 item.user = request.user
@@ -161,8 +209,8 @@ class OrderItemsAdmin(admin.ModelAdmin):
     def mark_as_stock(self, request, queryset):
         i = 0
         for obj in queryset:
-            if obj.order_data.state == u'archivée':
-                obj.state=u'stocké'
+            if obj.order_data.state == OrderItems.GET:
+                obj.state = OrderItems.DONE
                 obj.save()
                 i += 1
             else:
@@ -173,17 +221,30 @@ class OrderItemsAdmin(admin.ModelAdmin):
     def mark_as_missing(self, request, queryset):
         i = 0
         for obj in queryset:
-            if obj.order_data.state == order_state[1][0]:
-                obj.state = u'manquant'
+            if obj.order_data.state == OrderItems.GET:
+                obj.state = OrderItems.MISSING
                 obj.save()
                 i += 1
             else:
                 self.message_user(request, u'%s n\'est pas dans une commande reçue' % obj.item, u'error')
         self.message_user(request, u'%d objet stockés' % i)
 
+
+    def mark_as_canceled(self, request, queryset):
+        i = 0
+        for obj in queryset:
+            if obj.order_data.state == OrderItems.GET:
+                obj.state = OrderItems.MISSING
+                obj.save()
+                i += 1
+            else:
+                self.message_user(request, u'%s n\'est pas dans une commande reçue' % obj.item, u'error')
+        self.message_user(request, u'%d objet annulée(s)' % i)
+
     copy_items.short_description = u'copier vers la facture en cours'
     mark_as_stock.short_description = u'marquer comme stockées'
     mark_as_missing.short_description = u'marquer comme manquants'
+    mark_as_canceled.short_description = u'marquer comme annulées'
 
 admin.site.register(Category)
 admin.site.register(Supplier)
