@@ -4,6 +4,9 @@ tx
 Gestion de commandes pour un laboratoire de biologie via django
 S'appuye principalement sur l'auto-admin, voir main/models.py et main/admin.py
 
+Demo à https://guarded-forest-1734.herokuapp.com/admin/
+admin, admin
+
 Auto-admin
 ----------
 
@@ -53,7 +56,6 @@ Merci taskwarrior ;)
 
     ID Proj Pri Due        Age Urg  Description
     -- ---- --- ---------- --- ---- ---------------------------------------------
-    34 tx   M   2014-04-24 9d  11.8 deploy somwhere
     38 tx   M   2014-04-24 9d  11.8 check for nicer list display
     40 tx   M   2014-04-24 9d  11.8 init database with a new current order
     35 tx   L   2014-04-24 9d  9.68 mail 5000 python host
@@ -63,4 +65,3 @@ Merci taskwarrior ;)
     55 tx       2014-04-21 1h  8.92 create doc and user guide
     52 tx   M              2h   4.9 split admin code in utils and action at least
 
-    11 tasks
