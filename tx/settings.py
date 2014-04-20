@@ -10,8 +10,15 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-BASE_DIR = os.path.dirname(os.path.dirname(__file__))
-TEMPLATE_DIR = [os.path.join(BASE_DIR, 'templates')]
+root = os.path.dirname(os.path.dirname(__file__)).replace('\\','/')
+MEDIA_ROOT = root + '/../media/'
+STATIC_ROOT = root + '/../static'
+TEMPLATE_DIRS = (
+        root + '/../templates'
+)
+
+#TEMPLATE_DIR = [os.path.join(BASE_DIR, 'templates')]
+# BASE_DIR = os.path.dirname(os.path.dirname(__file__)).replace('\\','/')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
