@@ -20,6 +20,8 @@ TEMPLATE_DIRS = (
         root + '/../templates'
 )
 
+import dj_database_url
+DATABASES['default'] = dj_database_url.config()
 #TEMPLATE_DIR = [os.path.join(BASE_DIR, 'templates')]
 
 # Quick-start development settings - unsuitable for production
