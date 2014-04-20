@@ -56,12 +56,15 @@ Merci taskwarrior ;)
 
     ID Proj Pri Due        Age Urg  Description
     -- ---- --- ---------- --- ---- ---------------------------------------------
-    38 tx   M   2014-04-24 9d  11.8 check for nicer list display
-    40 tx   M   2014-04-24 9d  11.8 init database with a new current order
-    35 tx   L   2014-04-24 9d  9.68 mail 5000 python host
-    36 tx   L   2014-04-24 9d  9.68 mail smdie pythoon hosting
-    39 tx   L   2014-04-24 9d  9.68 automate or save user and groups rights
-    41 tx   L   2014-04-24 9d  9.67 think about database backup and license
-    55 tx       2014-04-21 1h  8.92 create doc and user guide
-    52 tx   M              2h   4.9 split admin code in utils and action at least
+    36 tx   M   2014-04-24 10d 12.4 catch 403 error on edit orderitems
+    38 tx   M   2014-04-24 10d 12.4 init database with a new current order
+    34 tx   L   2014-04-24 10d 10.3 mail 5000 python host
+    35 tx   L   2014-04-24 10d 10.3 mail smdie pythoon hosting
+    37 tx   L   2014-04-24 10d 10.3 automate or save user and groups rights
+    39 tx   L   2014-04-24 10d 10.3 think about database backup and license
+    52 tx       2014-04-21 1d   9.5 create doc and user guide
+    50 tx   M              1d  4.91 split admin code in utils and action at least
+    53 tx                  1d  1.01 override some msg in english to french
+    54 tx                  6s     1 fix xls or rethink it
 
+    10 tasks
