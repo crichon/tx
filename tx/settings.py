@@ -20,8 +20,6 @@ TEMPLATE_DIRS = (
         root + '/../templates'
 )
 
-import dj_database_url
-DATABASES['default'] = dj_database_url.config()
 #TEMPLATE_DIR = [os.path.join(BASE_DIR, 'templates')]
 
 # Quick-start development settings - unsuitable for production
@@ -76,6 +74,16 @@ WSGI_APPLICATION = 'tx.wsgi.application'
 #    }
 #}
 
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql_psygcopg2',
+        'NAME': 'daqkph7qnc6bhv',
+        'USER': 'nemfikadudwjsz',
+        'PASSWORD': 'Gr9gqlwARMacBLpeo3nPhbe8Fz',
+        'PORT': 5432,
+        'HOST': 'ec2-54-204-24-154.compute-1.amazonaws.com',
+    }
+
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
 
@@ -91,6 +99,5 @@ USE_L10N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/1.6/howto/static-files/
-
+import dj_database_url
+DATABASES['default'] = dj_database_url.config()
