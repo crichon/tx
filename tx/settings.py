@@ -83,7 +83,7 @@ DATABASES = {
         'PORT': 5432,
         'HOST': 'ec2-54-204-24-154.compute-1.amazonaws.com',
     }
-
+}
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
 
