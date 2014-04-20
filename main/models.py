@@ -64,6 +64,10 @@ class Order(models.Model):
     order_date = models.DateField(u'date d\'envoie de la commande', null=True, blank=True)
     reception_date = models.DateField(u'Date de réception de la commande', null=True, blank=True)
 
+    def items_count(self):
+        return self.orderitems_set.count()
+    items_count.short_description = u'Nombres d\'objets'
+
     def __unicode__(self):
         return 'commande du ' + self.create_date.strftime('%d/%m/%Y') + u', ' + self.get_state_display()
 

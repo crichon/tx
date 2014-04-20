@@ -5,8 +5,10 @@ from django.http import HttpResponse
 from django import forms
 
 from main.models import *
+from datetime import datetime
 
 import time
+import xlwt
 
 ORDER_CURRENT = (Order.ORDER_STATE[2], Order.ORDER_STATE[3])
 ORDER_WAITING = (Order.ORDER_STATE[2], Order.ORDER_STATE[4])
@@ -17,46 +19,64 @@ def create_xls(obj):
 
 
 def export_xls(ModelAdmin, request, queryset):
-    import xlwt
+    """produce x file per order given in the queryset
+    files are given "date_supplier.xls" name
+
+    ugly and sub-optimise but well, their is deadline
+    Also order won't be huge, so it's not aa big deal !
+
+    argh, don't know what's going on, should work, fucking lib
+    """
+
     response = HttpResponse(mimetype='application/ms-excel')
-    response['Content-Disposition'] = 'attachment; filename=commande - '+time.strftime("%d/%m/%Y")+'.xls'
+    response[u'Content-Disposition'] = u'attachment; filename=commande_' + time.strftime("%d/%m/%Y") + u'.xls'
     wb = xlwt.Workbook(encoding='utf-8')
-    #For each categorie create sheet
-    ws = wb.add_sheet("Commande")
 
-    row_num = 0
-    columns = (
-            (u"Type de produit", 5000),
-            (u"Identification", 12000),
-            (u"Volume/Qté", 5000),
-            (u"Référence", 5000),
-            (u"Fournisseur", 5000),
-            )
-    font_style = xlwt.XFStyle()
-    font_style.font.bold = True
-    #Set titles
-    for col_num in xrange(len(columns)):
-        ws.write(row_num, col_num, columns[col_num][0], font_style)
-        # set column width
-        ws.col(col_num).width = columns[col_num][1]
+    suppliers = Supplier.objects.all()
+    #For each supplier create sheet
+    for order in queryset:
+        for supp in suppliers:
+            print suppliers
+            print supp.name
+            if order.items.filter(supplier__name=supp.name):
 
-    font_style = xlwt.XFStyle()
-    font_style.alignment.wrap = 1
+                ws = wb.add_sheet(supp.name)
 
-    for obj in queryset[0].order.order_by('supplier'):
-        row_num += 1
-        row = [
-                obj.category.name,
-                obj.name,
-                obj.quantity,
-                obj.ref,
-                obj.supplier.name,
-                ]
-        for col_num in xrange(len(row)):
-            ws.write(row_num, col_num, row[col_num], font_style)
+                row_num = 0
+                columns = (
+                        #(u"Type de produit", 5000),
+                        (u"Identification", 12000),
+                        #(u"Volume/Qté", 5000),
+                        (u"Référence", 5000),
+                        (u"Quantitée", 5000),
+                        #(u"Fournisseur", 5000),
+                        )
+                font_style = xlwt.XFStyle()
+                font_style.font.bold = True
+                #Set titles
+                for col_num in xrange(len(columns)):
+                    ws.write(row_num, col_num, columns[col_num][0], font_style)
+                    # set column width
+                    ws.col(col_num).width = columns[col_num][1]
 
-        wb.save(response)
-        return response
+                font_style = xlwt.XFStyle()
+                font_style.alignment.wrap = 1
+
+                for obj in order.orderitems_set.filter(item__supplier__name=supp.name):
+                    print obj
+                    row_num += 1
+                    row = (
+                            #obj.item.category.name,
+                            obj.item.name,
+                            obj.item.ref,
+                            obj.needed,
+                            #obj.item.supplier.name,
+                          )
+                    print row
+                    for col_num in xrange(len(row)):
+                        ws.write(row_num, col_num, row[col_num], font_style)
+                wb.save(response)
+    return response
 export_xls.short_description = u"Export XLS"
 
 
@@ -74,6 +94,7 @@ class OrderFormWaiting(forms.ModelForm):
 
 class OrderAdmin(admin.ModelAdmin):
     actions = [export_xls]
+    list_display = (u'create_date', u'state', u'order_date', u'reception_date', u'items_count')
 
     def get_form(self, request, obj=None, **kwargs):
         """ Handle the choice given to the administator on the state's choices
@@ -113,6 +134,7 @@ class OrderAdmin(admin.ModelAdmin):
                 new_order.save()
                 if obj.state == Order.WAITING:
                     #order just been submitted
+                    obj.order_date = datetime.now()
                     create_xls(obj)
                     for item in obj.orderitems_set.all():
                         item.state = OrderItems.WAITING
@@ -120,12 +142,10 @@ class OrderAdmin(admin.ModelAdmin):
                 else:
                     # order is canceled
                     for item in obj.orderitems_set.all():
-                        print item
-                        print type(item)
-                        print item.state
                         item.state = OrderItems.CANCELED
                         item.save()
             elif obj.state == Order.GET:
+                obj.reception_date = datetime.now()
                 for item in obj.orderitems_set.all():
                     item.state = OrderItems.GET
                     item.save()
@@ -138,8 +158,10 @@ class ItemForms(forms.ModelForm):
         model=OrderItems
 
     def clean(self):
+        """ add validation on form level, nicer for the user than an integrity error"""
+        # add validator for ro fields ???
         order = Order.objects.get(state__startswith=Order.CURRENT)
-        if self.cleaned_data['item'] in order.items.all():
+        if u'item' in self.cleaned_data and self.cleaned_data['item'] in order.items.all():
             msg = u'%s est déjà dans la facture courante, veuillez sélectionnez un autre produit' % self.cleaned_data['item']
             raise forms.ValidationError(msg)
         return self.cleaned_data
@@ -151,10 +173,9 @@ class OrderItemsAdmin(admin.ModelAdmin):
     items action, available when a command has arrived, mark as * """
 
     form = ItemForms
-    #fields = (u'order_data', u'item', u'needed', u'state', u'for_user',)
-    # readonly_fields = (u'order_data',)
     actions = [u'copy_items', u'mark_as_stock', u'mark_as_missing', u'mark_as_canceled']
     list_filter = (u'for_user', 'state', u'order_data')
+    list_display = (u'item', u'needed', u'state', u'order_data', u'for_user')
 
     def get_form(self, request, obj=None, **kwargs):
         self.exclude = []
@@ -167,9 +188,14 @@ class OrderItemsAdmin(admin.ModelAdmin):
             self.readonly_fields.append(u'item')
             self.readonly_fields.append(u'state')
 
-        # Heu, just followed the docs on this one, but don\'t know wtf this is
         self.exclude.append(u'user')
         return super(OrderItemsAdmin, self).get_form(request, obj, **kwargs)
+
+    def has_change_permission(self, request, obj=None):
+        """ disable form depending on the object state"""
+        if obj is not None and obj.order_data.state != Order.CURRENT:
+            return False
+        return super(OrderItemsAdmin, self).has_change_permission(request, obj)
 
     def save_model(self, request, obj, form, change):
         """
