@@ -10,15 +10,17 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
+BASE_DIR = os.path.dirname(os.path.dirname(__file__)).replace('\\','/')
 root = os.path.dirname(os.path.dirname(__file__)).replace('\\','/')
 MEDIA_ROOT = root + '/../media/'
-STATIC_ROOT = root + '/../static'
+STATIC_ROOT = 'staticfiles'
+STATIC_URL = 'static'
+STATIC_DIRS = (os.path.join(BASE_DIR, u'static'),)
 TEMPLATE_DIRS = (
         root + '/../templates'
 )
 
 #TEMPLATE_DIR = [os.path.join(BASE_DIR, 'templates')]
-# BASE_DIR = os.path.dirname(os.path.dirname(__file__)).replace('\\','/')
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
@@ -90,4 +92,3 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/1.6/howto/static-files/
 
-STATIC_URL = root + u'/static/'
