@@ -4,6 +4,7 @@ from django.contrib import admin
 from django.http import HttpResponse
 from django import forms
 
+from easy_select2 import select2_modelform_meta
 from main.models import *
 from datetime import datetime
 
@@ -154,11 +155,11 @@ class OrderAdmin(admin.ModelAdmin):
 
 class ItemForms(forms.ModelForm):
 
-    class Meta:
-        model=OrderItems
+    Meta = select2_modelform_meta(OrderItems)
 
     def clean(self):
         """ add validation on form level, nicer for the user than an integrity error"""
+
         # add validator for ro fields ???
         order = Order.objects.get(state__startswith=Order.CURRENT)
         if u'item' in self.cleaned_data and self.cleaned_data['item'] in order.items.all():
