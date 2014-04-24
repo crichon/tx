@@ -26,9 +26,9 @@ class Supplier(models.Model):
 
 
 class Item(models.Model):
-    category = models.ForeignKey(Category, null=True, blank=True)
-    supplier = models.ForeignKey(Supplier, null=True, blank=True)
-    ref = models.CharField(u"référence", max_length=50)
+    category = models.ForeignKey(Category, null=True, blank=True, verbose_name=u'Catégories')
+    supplier = models.ForeignKey(Supplier, null=True, blank=True, verbose_name=u'Fournisseur')
+    ref = models.CharField(u'référence', max_length=50)
     name = models.CharField(u'identifiant', max_length=50)
     quantity = models.CharField(u'quantité/volume', max_length=50)
     place = models.CharField(u'lieu de stockage', max_length=50)
@@ -117,10 +117,8 @@ class OrderItems(models.Model):
                     print item
                     done = False
         else:
-            print "heu ?"
             done = False
         if done:
-            print "wtf"
             self.order_data.state = Order.DONE
             self.order_data.save()
 

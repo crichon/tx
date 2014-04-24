@@ -175,8 +175,10 @@ class OrderItemsAdmin(admin.ModelAdmin):
 
     form = ItemForms
     actions = [u'copy_items', u'mark_as_stock', u'mark_as_missing', u'mark_as_canceled']
-    list_filter = (u'for_user', 'state', u'order_data')
     list_display = (u'item', u'needed', u'state', u'order_data', u'for_user')
+    search_fields = (u'for_user__username', u'item__name',)
+    list_filter = (u'for_user', 'state', u'order_data')
+    preserve_filters = True
 
     def get_form(self, request, obj=None, **kwargs):
         self.exclude = []
@@ -273,8 +275,21 @@ class OrderItemsAdmin(admin.ModelAdmin):
     mark_as_missing.short_description = u'marquer comme manquants'
     mark_as_canceled.short_description = u'marquer comme annulées'
 
+
+class ItemAdmin(admin.ModelAdmin):
+    list_display = (u'name', u'quantity', u'stockage_modality', u'category', u'supplier',)
+    list_filter = (u'category__name', u'supplier__name',)
+    search_fields = (u'name', u'category__name', u'supplier__name',)
+
+
+class SupplierAdmin(admin.ModelAdmin):
+    list_display = (u'name', u'website', u'adress',)
+    list_filter = (u'name', u'website', u'adress',)
+    search_fields = (u'name', u'website', u'adress',)
+
+
 admin.site.register(Category)
-admin.site.register(Supplier)
-admin.site.register(Item)
+admin.site.register(Supplier, SupplierAdmin)
+admin.site.register(Item, ItemAdmin)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(OrderItems, OrderItemsAdmin)
