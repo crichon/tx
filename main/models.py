@@ -72,7 +72,7 @@ class Order(models.Model):
         return 'commande du ' + self.create_date.strftime('%d/%m/%Y') + u', ' + self.get_state_display()
 
     class Meta:
-        verbose_name = u'Commande'
+        verbose_name = u'Validation des commande'
 
 
 class OrderItems(models.Model):
