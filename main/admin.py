@@ -173,7 +173,6 @@ class OrderItemsAdmin(admin.ModelAdmin):
     items action, available when a command has arrived, mark as * """
 
     form = ItemForms
-    actions = [u'copy_items', u'mark_as_stock', u'mark_as_missing', u'mark_as_canceled', u'mark_as_get']
     list_display = (u'item', u'item__quantity', u'needed', u'state', u'order_data', u'for_user')
     search_fields = (u'for_user__username', u'item__name',)
     list_filter = (u'for_user', 'state', u'order_data')
@@ -223,7 +222,8 @@ class OrderItemsAdmin(admin.ModelAdmin):
         i = 0
         for obj in queryset:
             if obj.order_data == current_order or obj.item in current_order.items.all():
-                self.message_user(request, u'%s est déjà dans la facture courante, veuillez plutôt l\'éditer' % obj.item, u'error')
+                self.message_user(request, \
+                        u'%s est déjà dans la facture courante, veuillez plutôt l\'éditer' % obj.item, u'error')
             else:
                 item = OrderItems()
                 item.state = OrderItems.CURRENT
@@ -283,7 +283,20 @@ class OrderItemsAdmin(admin.ModelAdmin):
                 self.message_user(request, u'%s n\'est pas en attente de réception' % obj.item, u'error')
         self.message_user(request, u'%d objet reçue(s)' % i)
 
+    def get_actions(self, request):
+        """ filter available actions depending on the user """
+        actions = super(OrderItemsAdmin, self).get_actions(request)
+        print actions
+        print request.user
+        if u'responsables commandes' in request.user.groups.all() or request.user.is_superuser:
+            pass
+        else:
+            print "blop"
+            del actions[u'mark_as_canceled']
+        return actions
 
+
+    actions = [u'copy_items', u'mark_as_stock', u'mark_as_missing', u'mark_as_get', u'mark_as_canceled']
     copy_items.short_description = u'copier vers la facture en cours'
     mark_as_stock.short_description = u'marquer comme stockées'
     mark_as_missing.short_description = u'marquer comme manquants'
