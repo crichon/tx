@@ -27,7 +27,7 @@ class Supplier(models.Model):
 
 class Item(models.Model):
     category = models.ForeignKey(Category, null=True, blank=True, verbose_name=u'Catégories')
-    supplier = models.ForeignKey(Supplier, null=True, blank=True, verbose_name=u'Fournisseur')
+    supplier = models.ForeignKey(Supplier, verbose_name=u'Fournisseur')
     ref = models.CharField(u'référence', max_length=50)
     name = models.CharField(u'identifiant', max_length=50)
     quantity = models.CharField(u'quantité/volume', max_length=50)
@@ -39,7 +39,7 @@ class Item(models.Model):
 
 
     def __unicode__(self):
-        return self.name
+        return self.name  + u', ref: ' + self.ref
 
 
 class Order(models.Model):
@@ -55,7 +55,7 @@ class Order(models.Model):
             (DONE, u'archivée'),
             (CANCELED, u'annulée'),
             (WAITING, u'en attente de réception'),
-            (GET, u'reçue'),
+            #(GET, u'reçue'),
     )
 
     items = models.ManyToManyField(Item, through='OrderItems')

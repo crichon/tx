@@ -12,7 +12,7 @@ import time
 import xlwt
 
 ORDER_CURRENT = (Order.ORDER_STATE[2], Order.ORDER_STATE[3])
-ORDER_WAITING = (Order.ORDER_STATE[2], Order.ORDER_STATE[4])
+ORDER_WAITING = (Order.ORDER_STATE[2])
 
 
 def create_xls(obj):
@@ -101,7 +101,7 @@ class OrderAdmin(admin.ModelAdmin):
         """ Handle the choice given to the administator on the state's choices
 
         current -> *canceled or waiting
-        waiting -> canceld or *get
+        waiting -> canceld
 
         other transition are handeld in self.save()
         *see below*
@@ -125,7 +125,6 @@ class OrderAdmin(admin.ModelAdmin):
             - canceled, waiting -> create a new order
             - canceled -> mark OrderItems as canceled
             - waiting -> generate command
-            - get -> mark OrderItems as get
         """
         if change == True:
             if obj.state == Order.CANCELED or obj.state == Order.WAITING:
@@ -145,11 +144,11 @@ class OrderAdmin(admin.ModelAdmin):
                     for item in obj.orderitems_set.all():
                         item.state = OrderItems.CANCELED
                         item.save()
-            elif obj.state == Order.GET:
-                obj.reception_date = datetime.now()
-                for item in obj.orderitems_set.all():
-                    item.state = OrderItems.GET
-                    item.save()
+#            elif obj.state == Order.GET:
+#                obj.reception_date = datetime.now()
+#                for item in obj.orderitems_set.all():
+#                    item.state = OrderItems.GET
+#                    item.save()
         obj.save()
 
 
@@ -174,11 +173,15 @@ class OrderItemsAdmin(admin.ModelAdmin):
     items action, available when a command has arrived, mark as * """
 
     form = ItemForms
-    actions = [u'copy_items', u'mark_as_stock', u'mark_as_missing', u'mark_as_canceled']
-    list_display = (u'item', u'needed', u'state', u'order_data', u'for_user')
+    actions = [u'copy_items', u'mark_as_stock', u'mark_as_missing', u'mark_as_canceled', u'mark_as_get']
+    list_display = (u'item', u'item__quantity', u'needed', u'state', u'order_data', u'for_user')
     search_fields = (u'for_user__username', u'item__name',)
     list_filter = (u'for_user', 'state', u'order_data')
     preserve_filters = True
+
+    def item__quantity(self, instance):
+        return instance.item.quantity
+    item__quantity.short_description = u'Quantitée par lot'
 
     def get_form(self, request, obj=None, **kwargs):
         self.exclude = []
@@ -250,7 +253,7 @@ class OrderItemsAdmin(admin.ModelAdmin):
     def mark_as_missing(self, request, queryset):
         i = 0
         for obj in queryset:
-            if obj.order_data.state == OrderItems.GET:
+            if obj.order_data.state == OrderItems.WAITING:
                 obj.state = OrderItems.MISSING
                 obj.save()
                 i += 1
@@ -262,7 +265,7 @@ class OrderItemsAdmin(admin.ModelAdmin):
     def mark_as_canceled(self, request, queryset):
         i = 0
         for obj in queryset:
-            if obj.order_data.state == OrderItems.GET:
+            if obj.order_data.state == OrderItems.GET or obj.order_data.state == OrderItems.WAITING:
                 obj.state = OrderItems.MISSING
                 obj.save()
                 i += 1
@@ -270,14 +273,28 @@ class OrderItemsAdmin(admin.ModelAdmin):
                 self.message_user(request, u'%s n\'est pas dans une commande reçue' % obj.item, u'error')
         self.message_user(request, u'%d objet annulée(s)' % i)
 
+
+    def mark_as_get(self, request, queryset):
+        i = 0
+        for obj in queryset:
+            if obj.order_data.state == OrderItems.WAITING:
+                obj.state = OrderItems.GET
+                obj.save()
+                i += 1
+            else:
+                self.message_user(request, u'%s n\'est pas en attente de réception' % obj.item, u'error')
+        self.message_user(request, u'%d objet reçue(s)' % i)
+
+
     copy_items.short_description = u'copier vers la facture en cours'
     mark_as_stock.short_description = u'marquer comme stockées'
     mark_as_missing.short_description = u'marquer comme manquants'
     mark_as_canceled.short_description = u'marquer comme annulées'
+    mark_as_get.short_description = u'marquer comme reçues'
 
 
 class ItemAdmin(admin.ModelAdmin):
-    list_display = (u'name', u'quantity', u'stockage_modality', u'category', u'supplier',)
+    list_display = (u'name', u'ref', u'quantity', u'stockage_modality', u'category', u'supplier',)
     list_filter = (u'category__name', u'supplier__name',)
     search_fields = (u'name', u'category__name', u'supplier__name',)
 
