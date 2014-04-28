@@ -24,7 +24,7 @@ def export_xls(ModelAdmin, request, queryset):
     files are given "date_supplier.xls" name
 
     ugly and sub-optimise but well, their is deadline
-    Also order won't be huge, so it's not aa big deal !
+    Also order won't be huge, so it's not a big deal !
 
     argh, don't know what's going on, should work, fucking lib
     """
@@ -144,11 +144,6 @@ class OrderAdmin(admin.ModelAdmin):
                     for item in obj.orderitems_set.all():
                         item.state = OrderItems.CANCELED
                         item.save()
-#            elif obj.state == Order.GET:
-#                obj.reception_date = datetime.now()
-#                for item in obj.orderitems_set.all():
-#                    item.state = OrderItems.GET
-#                    item.save()
         obj.save()
 
 
@@ -157,12 +152,17 @@ class ItemForms(forms.ModelForm):
     Meta = select2_modelform_meta(OrderItems)
 
     def clean(self):
-        """ add validation on form level, nicer for the user than an integrity error"""
-
-        # add validator for ro fields ???
+        """ add validation on form level, nicer for the user than an integrity error.
+        Also, provide special user "tous" as a default value for "for_user" field.
+        Done here as Django check constraint for each field provided with the form
+        """
         order = Order.objects.get(state__startswith=Order.CURRENT)
+
+        if not self.cleaned_data['for_user']:
+            self.cleaned_data['for_user'] = User.objects.get(username__startswith=u'tous')
         if u'item' in self.cleaned_data and self.cleaned_data['item'] in order.items.all():
-            msg = u'%s est déjà dans la facture courante, veuillez sélectionnez un autre produit' % self.cleaned_data['item']
+            msg = u'%s est déjà dans la facture courante, veuillez sélectionnez un autre produit' \
+                    % self.cleaned_data['item']
             raise forms.ValidationError(msg)
         return self.cleaned_data
 
@@ -211,8 +211,6 @@ class OrderItemsAdmin(admin.ModelAdmin):
         - if new, add it to the last order
         """
         obj.user = request.user
-        if not obj.for_user:
-            obj.for_user = request.user
         if change == False:
             current_order = Order.objects.get(state__startswith=Order.CURRENT)
             obj.order_data = current_order

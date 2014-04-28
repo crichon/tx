@@ -97,7 +97,8 @@ class OrderItems(models.Model):
     item = models.ForeignKey(Item, verbose_name=u'objet')
     needed = models.IntegerField(verbose_name=u'quantité à commander', default=0)
     state = models.CharField(verbose_name=u'état', max_length=50, choices=ITEM_STATE)
-    for_user = models.ForeignKey(User, related_name=u'OrderItems_for_user', verbose_name=u'pour', blank=True, null=True) # related name needed to help django manage multiple foreign keys on the same table
+    for_user = models.ForeignKey(User, related_name=u'OrderItems_for_user', verbose_name=u'pour', blank=True)
+ # related name needed to help django manage multiple foreign keys on the same table
     user = models.ForeignKey(User, verbose_name=u'utilisateur')
     last_edited = models.DateField(u'date de création', auto_now=True)
 
@@ -112,9 +113,7 @@ class OrderItems(models.Model):
         done = True
         if self.order_data.orderitems_set.all():
             for item in self.order_data.orderitems_set.all():
-                print item.state
                 if item.state not in (self.CANCELED, self.DONE, self.MISSING):
-                    print item
                     done = False
         else:
             done = False
