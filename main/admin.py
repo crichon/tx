@@ -95,7 +95,7 @@ class OrderFormWaiting(forms.ModelForm):
 
 class OrderAdmin(admin.ModelAdmin):
     actions = [export_xls]
-    list_display = (u'create_date', u'state', u'order_date', u'reception_date', u'items_count')
+    list_display = (u'create_date', u'state', u'order_date', u'completion_date', u'items_count')
 
     def get_form(self, request, obj=None, **kwargs):
         """ Handle the choice given to the administator on the state's choices
@@ -107,8 +107,7 @@ class OrderAdmin(admin.ModelAdmin):
         *see below*
         except for done which is handeld by OrderItems.save() on state_change
         """
-        # self.fields = [u'state', u'create_date', u'order_date', u'reception_date']
-        self.readonly_fields = [u'create_date', u'order_date', u'reception_date']
+        self.readonly_fields = [u'create_date', u'order_date', u'completion_date']
 
         if not obj == None:
             if obj.state == Order.CURRENT:
@@ -178,9 +177,11 @@ class OrderItemsAdmin(admin.ModelAdmin):
     list_filter = (u'for_user', 'state', u'order_data')
     preserve_filters = True
 
+
     def item__quantity(self, instance):
         return instance.item.quantity
     item__quantity.short_description = u'Quantitée par lot'
+
 
     def get_form(self, request, obj=None, **kwargs):
         self.exclude = []
@@ -196,11 +197,13 @@ class OrderItemsAdmin(admin.ModelAdmin):
         self.exclude.append(u'user')
         return super(OrderItemsAdmin, self).get_form(request, obj, **kwargs)
 
+
     def has_change_permission(self, request, obj=None):
         """ disable form depending on the object state"""
         if obj is not None and obj.order_data.state != Order.CURRENT:
             return False
         return super(OrderItemsAdmin, self).has_change_permission(request, obj)
+
 
     def save_model(self, request, obj, form, change):
         """

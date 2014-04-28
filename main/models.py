@@ -2,6 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+import datetime
 
 class Category(models.Model):
     name = models.CharField('categorie', max_length=50)
@@ -61,8 +62,8 @@ class Order(models.Model):
     items = models.ManyToManyField(Item, through='OrderItems')
     state = models.CharField(u'état', max_length=50, choices=ORDER_STATE, default=CURRENT)
     create_date = models.DateField(u'date de création', auto_now_add=True)
-    order_date = models.DateField(u'date d\'envoie de la commande', null=True, blank=True)
-    reception_date = models.DateField(u'Date de réception de la commande', null=True, blank=True)
+    order_date = models.DateField(u'date d\'envoie', null=True, blank=True)
+    completion_date = models.DateField(u'Date d\'archivage', null=True, blank=True)
 
     def items_count(self):
         return self.orderitems_set.count()
@@ -118,6 +119,7 @@ class OrderItems(models.Model):
         else:
             done = False
         if done:
+            self.order_data.completion_date = datetime.now()
             self.order_data.state = Order.DONE
             self.order_data.save()
 
