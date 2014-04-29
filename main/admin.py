@@ -1,5 +1,7 @@
 # -*- coding: utf8 -*-
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.models import Group
+from django.core.mail import send_mail
 from django.contrib import admin
 from django.http import HttpResponse, HttpResponseRedirect
 from django import forms
@@ -36,8 +38,6 @@ def export_xls(ModelAdmin, request, queryset):
     #For each supplier create sheet
     for order in queryset:
         for supp in suppliers:
-            print suppliers
-            print supp.name
             if order.items.filter(supplier__name=supp.name):
 
                 ws = wb.add_sheet(supp.name)
@@ -63,7 +63,6 @@ def export_xls(ModelAdmin, request, queryset):
                 font_style.alignment.wrap = 1
 
                 for obj in order.orderitems_set.filter(item__supplier__name=supp.name):
-                    print obj
                     row_num += 1
                     row = (
                             #obj.item.category.name,
@@ -72,7 +71,6 @@ def export_xls(ModelAdmin, request, queryset):
                             obj.needed,
                             #obj.item.supplier.name,
                           )
-                    print row
                     for col_num in xrange(len(row)):
                         ws.write(row_num, col_num, row[col_num], font_style)
                 wb.save(response)
@@ -242,37 +240,43 @@ class OrderItemsAdmin(admin.ModelAdmin):
     def mark_as_stock(self, request, queryset):
         i = 0
         for obj in queryset:
-            if obj.order_data.state == OrderItems.GET:
+            if obj.state == OrderItems.GET:
                 obj.state = OrderItems.DONE
                 obj.save()
                 i += 1
             else:
-                self.message_user(request, u'%s n\'est pas dans une commande reçue' % obj.item, u'error')
+                self.message_user(request, u'%s n\'est pas dans les objets reçues' % obj.item, u'error')
         self.message_user(request, u'%d objet stockés' % i)
 
 
     def mark_as_missing(self, request, queryset):
         i = 0
         for obj in queryset:
-            if obj.order_data.state == OrderItems.WAITING:
+            if obj.state == OrderItems.WAITING:
                 obj.state = OrderItems.MISSING
                 obj.save()
                 i += 1
             else:
-                self.message_user(request, u'%s n\'est pas dans une commande reçue' % obj.item, u'error')
-        self.message_user(request, u'%d objet stockés' % i)
+                self.message_user(request, u'%s n\'est pas dans les objets en attente de rééception' % obj.item, u'error')
+        self.message_user(request, u'%d objet(s) stockés' % i)
 
 
     def mark_as_canceled(self, request, queryset):
         i = 0
         for obj in queryset:
-            if obj.order_data.state == OrderItems.GET or obj.order_data.state == OrderItems.WAITING:
-                obj.state = OrderItems.MISSING
+            if obj.order_data.state == OrderItems.WAITING and obj.state in (OrderItems.CURRENT, OrderItems.WAITING,):
+                obj.state = OrderItems.CANCELED
                 obj.save()
                 i += 1
+                send_mail(u'Commande anulée',\
+                        u'La commande de ' + obj.item.__unicode__() + u' a été anulée', request.user.email, \
+                        [obj.for_user.email] if obj.for_user.username != u'tous' else\
+                        [user.email for user in Group.objects.get(name__startswith=u'utilisateur').user_set.all()]\
+                        , fail_silently=False
+                )
             else:
-                self.message_user(request, u'%s n\'est pas dans une commande reçue' % obj.item, u'error')
-        self.message_user(request, u'%d objet annulée(s)' % i)
+                self.message_user(request, u'%s n\'est ni dans les objets à valider, ni dans ceux en attentes' % obj.item, u'error')
+        self.message_user(request, u'%d objet(s) annulée(s)' % i)
 
 
     def mark_as_get(self, request, queryset):
@@ -289,12 +293,9 @@ class OrderItemsAdmin(admin.ModelAdmin):
     def get_actions(self, request):
         """ filter available actions depending on the user """
         actions = super(OrderItemsAdmin, self).get_actions(request)
-        print actions
-        print request.user
         if u'responsables commandes' in request.user.groups.all() or request.user.is_superuser:
             pass
         else:
-            print "blop"
             del actions[u'mark_as_canceled']
         return actions
 
