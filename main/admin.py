@@ -1,7 +1,7 @@
 # -*- coding: utf8 -*-
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib import admin
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django import forms
 
 from easy_select2 import select2_modelform_meta
@@ -12,7 +12,6 @@ import time
 import xlwt
 
 ORDER_CURRENT = (Order.ORDER_STATE[2], Order.ORDER_STATE[3])
-ORDER_WAITING = (Order.ORDER_STATE[2])
 
 
 def create_xls(obj):
@@ -87,12 +86,6 @@ class OrderFormCurrent(forms.ModelForm):
         self.fields[u'state'] = forms.ChoiceField(choices=ORDER_CURRENT)
 
 
-class OrderFormWaiting(forms.ModelForm):
-    def __init__(self,  *args, **kwargs):
-        super(OrderFormWaiting, self).__init__(*args, **kwargs)
-        self.fields[u'state'] = forms.ChoiceField(choices=ORDER_WAITING)
-
-
 class OrderAdmin(admin.ModelAdmin):
     actions = [export_xls]
     list_display = (u'create_date', u'state', u'order_date', u'completion_date', u'items_count')
@@ -112,12 +105,10 @@ class OrderAdmin(admin.ModelAdmin):
         if not obj == None:
             if obj.state == Order.CURRENT:
                 self.form = OrderFormCurrent
-            elif obj.state == Order.WAITING:
-                self.form = OrderFormWaiting
             else:
                 self.readonly_fields.append(u'state')
-
         return super(OrderAdmin, self).get_form(request, obj, **kwargs)
+
 
     def save_model(self, request, obj, form, change):
         """ if state change to:
@@ -167,9 +158,7 @@ class ItemForms(forms.ModelForm):
 
 
 class OrderItemsAdmin(admin.ModelAdmin):
-    """ Handles Items addition and actions
-    user action, copy to current order
-    items action, available when a command has arrived, mark as * """
+    """ Handles Items addition and actions"""
 
     form = ItemForms
     list_display = (u'item', u'item__quantity', u'needed', u'state', u'order_data', u'for_user')
@@ -182,6 +171,17 @@ class OrderItemsAdmin(admin.ModelAdmin):
         return instance.item.quantity
     item__quantity.short_description = u'Quantitée par lot'
 
+
+    def changelist_view(self, request, extra_context = None):
+        """ set current order as default filter
+        Note, I should reverse url instead of harcoding it """
+        test = request.META.get('HTTP_REFERER', u'').split(request.META['PATH_INFO'])
+
+        if test[-1] and not test[-1].startswith(u'?'):
+            if u'order_data__id__exact' not in request.GET:
+                current_order_id = Order.objects.get(state__startswith=Order.CURRENT).id
+                return HttpResponseRedirect(u'/admin/main/orderitems/?order_data__id__exact=' + str(current_order_id))
+        return super(OrderItemsAdmin, self).changelist_view(request, extra_context=extra_context)
 
     def get_form(self, request, obj=None, **kwargs):
         self.exclude = []
