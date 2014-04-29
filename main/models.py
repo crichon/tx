@@ -2,7 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
-import datetime
+from datetime import datetime
 
 class Category(models.Model):
     name = models.CharField('categorie', max_length=50)
