@@ -159,11 +159,18 @@ class OrderItemsAdmin(admin.ModelAdmin):
     """ Handles Items addition and actions"""
 
     form = ItemForms
-    list_display = (u'item', u'item__quantity', u'needed', u'state', u'order_data', u'for_user')
+    list_display = (u'my_item', u'item__quantity', u'needed', u'state', u'order_data', u'for_user')
+    list_display_links = None
     search_fields = (u'for_user__username', u'item__name',)
     list_filter = (u'for_user', 'state', u'order_data')
     preserve_filters = True
 
+
+    def my_item(self, instance):
+        if instance.state == OrderItems.CURRENT:
+            return u'<a href="./' + str(instance.id) + '" >' + instance.item.name + u'</a>'
+        return instance.item.name
+    my_item.allow_tags=True
 
     def item__quantity(self, instance):
         return instance.item.quantity
