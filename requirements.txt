@@ -1,11 +1,11 @@
-#django==1.6.2 https://www.djangoproject.com/download/1.7b1/tarball/
+-e git+http://github.com/django/django.git@releases/1.7b3#egg=Django
 django-admin-bootstrapped==1.6.3
 xlwt==0.7.5
 gunicorn==18.0
 #psycopg2==2.5.1
-dj-database-url==0.2.2
-dj-static==0.0.5
-static==0.4
+#dj-database-url==0.2.2
+#dj-static==0.0.5
+#static==0.4
 wsgiref==0.1.2
 django_easy_select2==1.2.2
 xlrd

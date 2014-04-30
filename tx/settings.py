@@ -17,16 +17,13 @@ STATIC_ROOT = 'staticfiles'
 STATIC_URL = '/static/'
 STATIC_DIRS = (os.path.join(BASE_DIR, u'static'),)
 TEMPLATE_DIRS = (
-        root + '/../templates'
+        root + '/../templates',
 )
 
 #TEMPLATE_DIR = [os.path.join(BASE_DIR, 'templates')]
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '7-)l_n0-y^e%-4!0ugm8w=s!dt-037a3h72n^#isu&uxj+m8w-'
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
@@ -69,15 +66,22 @@ WSGI_APPLICATION = 'tx.wsgi.application'
 # https://docs.djangoproject.com/en/1.6/ref/settings/#databases
 
 DATABASES = {
-  'default': {
-    'ENGINE': 'django.db.backends.postgresql_psycopg2',
-    'NAME': 'daqkph7qnc6bhv',
-    'HOST': 'ec2-54-204-24-154.compute-1.amazonaws.com',
-    'PORT': 5432,
-    'USER': 'nemfikadudwjsz',
-    'PASSWORD': 'Gr9gqlwARMacBLpeo3nPhbe8Fz'
-  }
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
 }
+
+#DATABASES = {
+#  'default': {
+#    'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#    'NAME': 'daqkph7qnc6bhv',
+#    'HOST': 'ec2-54-204-24-154.compute-1.amazonaws.com',
+#    'PORT': 5432,
+#    'USER': 'nemfikadudwjsz',
+#    'PASSWORD': 'Gr9gqlwARMacBLpeo3nPhbe8Fz'
+#  }
+#}
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
 
@@ -92,4 +96,4 @@ USE_L10N = True
 
 USE_TZ = True
 
-
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
