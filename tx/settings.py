@@ -10,27 +10,24 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-root = os.path.dirname(os.path.dirname(__file__)).replace('\\','/')
-MEDIA_ROOT = root + '/../media/'
-STATIC_ROOT = 'staticfiles'
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+#root = os.path.dirname(os.path.dirname(__file__)).replace('\\','/')
+#MEDIA_ROOT = root + '/../media/'
+STATIC_ROOT = '/home/tx/staticfiles'
 STATIC_URL = '/static/'
 STATIC_DIRS = (os.path.join(BASE_DIR, u'static'),)
-TEMPLATE_DIRS = (
-        root + '/../templates',
-)
 
-#TEMPLATE_DIR = [os.path.join(BASE_DIR, 'templates')]
+TEMPLATE_DIR = [os.path.join(BASE_DIR, 'templates')]
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False 
 
-TEMPLATE_DEBUG = True
+TEMPLATE_DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [u'localhost', u'176.ip-92-222-19.eu']
 
 
 # Application definition

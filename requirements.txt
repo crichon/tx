@@ -1,4 +1,4 @@
--e git+http://github.com/django/django.git@releases/1.7b3#egg=Django
+-e git+http://github.com/django/django.git@1.7b3#egg=Django
 django-admin-bootstrapped==1.6.3
 xlwt==0.7.5
 gunicorn==18.0
