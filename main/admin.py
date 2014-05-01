@@ -247,7 +247,7 @@ class OrderItemsAdmin(admin.ModelAdmin):
     def mark_as_stock(self, request, queryset):
         i = 0
         for obj in queryset:
-            if obj.state == OrderItems.GET:
+            if obj.order_data.state == Order.WAITING and obj.state == OrderItems.GET:
                 obj.state = OrderItems.DONE
                 obj.save()
                 i += 1
@@ -259,19 +259,19 @@ class OrderItemsAdmin(admin.ModelAdmin):
     def mark_as_missing(self, request, queryset):
         i = 0
         for obj in queryset:
-            if obj.state == OrderItems.WAITING:
+            if obj.order_data.state == Order.WAITING and obj.state in (OrderItems.WAITING, OrderItems.CANCELED,):
                 obj.state = OrderItems.MISSING
                 obj.save()
                 i += 1
             else:
-                self.message_user(request, u'%s n\'est pas dans les objets en attente de rééception' % obj.item, u'error')
+                self.message_user(request, u'%s n\'est pas dans les objets en attente de réception' % obj.item, u'error')
         self.message_user(request, u'%d objet(s) stockés' % i)
 
 
     def mark_as_canceled(self, request, queryset):
         i = 0
         for obj in queryset:
-            if obj.order_data.state == OrderItems.WAITING and obj.state in (OrderItems.CURRENT, OrderItems.WAITING,):
+            if obj.order_data.state == Order.WAITING:
                 obj.state = OrderItems.CANCELED
                 obj.save()
                 i += 1
@@ -282,14 +282,14 @@ class OrderItemsAdmin(admin.ModelAdmin):
                         , fail_silently=False
                 )
             else:
-                self.message_user(request, u'%s n\'est ni dans les objets à valider, ni dans ceux en attentes' % obj.item, u'error')
+                self.message_user(request, u'%s n\'est pas dans une commande non traitée' % obj.item, u'error')
         self.message_user(request, u'%d objet(s) annulée(s)' % i)
 
 
     def mark_as_get(self, request, queryset):
         i = 0
         for obj in queryset:
-            if obj.order_data.state == OrderItems.WAITING:
+            if obj.order_data.state == Order.WAITING and obj.state in (OrderItems.WAITING, OrderItems.CANCELED,):
                 obj.state = OrderItems.GET
                 obj.save()
                 i += 1
@@ -300,7 +300,7 @@ class OrderItemsAdmin(admin.ModelAdmin):
     def get_actions(self, request):
         """ filter available actions depending on the user """
         actions = super(OrderItemsAdmin, self).get_actions(request)
-        if u'responsables commandes' in request.user.groups.all() or request.user.is_superuser:
+        if u'responsables commandes' == request.user.groups.all()[0].name or request.user.is_superuser:
             pass
         else:
             del actions[u'mark_as_canceled']

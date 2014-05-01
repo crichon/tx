@@ -49,7 +49,7 @@ class Order(models.Model):
     DONE = u'D'
     CANCELED = u'CA'
     WAITING = u'W'
-    GET = u'G'
+#    GET = u'G'
 
     ORDER_STATE = (
             (CURRENT, u'en cours'),
