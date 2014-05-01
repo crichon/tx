@@ -265,7 +265,19 @@ class OrderItemsAdmin(admin.ModelAdmin):
                 i += 1
             else:
                 self.message_user(request, u'%s n\'est pas dans les objets en attente de réception' % obj.item, u'error')
-        self.message_user(request, u'%d objet(s) stockés' % i)
+        self.message_user(request, u'%d objet(s) manquant(s)' % i)
+
+
+    def mark_as_waiting(self, request, queryset):
+        i = 0
+        for obj in queryset:
+            if obj.order_data.state == Order.WAITING:
+                obj.state = OrderItems.WAITING
+                obj.save()
+                i += 1
+            else:
+                self.message_user(request, u'%s n\'est pas dans une facture à traiter' % obj.item, u'error')
+        self.message_user(request, u'%d objet(s) passé(s) en attente' % i)
 
 
     def mark_as_canceled(self, request, queryset):
@@ -307,11 +319,12 @@ class OrderItemsAdmin(admin.ModelAdmin):
         return actions
 
 
-    actions = [u'copy_items', u'mark_as_stock', u'mark_as_missing', u'mark_as_get', u'mark_as_canceled']
+    actions = [u'copy_items', u'mark_as_stock', u'mark_as_missing', u'mark_as_get', u'mark_as_canceled', u'mark_as_waiting']
     copy_items.short_description = u'copier vers la facture en cours'
     mark_as_stock.short_description = u'marquer comme stockées'
     mark_as_missing.short_description = u'marquer comme manquants'
     mark_as_canceled.short_description = u'marquer comme annulées'
+    mark_as_waiting.short_description = u'marquer comme en attentes'
     mark_as_get.short_description = u'marquer comme reçues'
 
 
