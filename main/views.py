@@ -18,9 +18,6 @@ def importItem(file_path):
 	#Ouverture du fichier
 	rb = open_workbook(file_path)
 	r_sheet = rb.sheet_by_index(0)
-	category_list = []
-
-
 
 	for row_index in range (1, r_sheet.nrows):
 		#Hydratation or get Supplier Model
