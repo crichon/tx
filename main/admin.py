@@ -1,7 +1,9 @@
 # -*- coding: utf8 -*-
 from django.core.exceptions import ObjectDoesNotExist
+from django.contrib.auth.models import Group
+from django.core.mail import send_mail
 from django.contrib import admin
-from django.http import HttpResponse
+from django.http import HttpResponse, HttpResponseRedirect
 from django import forms
 
 from easy_select2 import select2_modelform_meta
@@ -12,7 +14,6 @@ import time
 import xlwt
 
 ORDER_CURRENT = (Order.ORDER_STATE[2], Order.ORDER_STATE[3])
-ORDER_WAITING = (Order.ORDER_STATE[2], Order.ORDER_STATE[4])
 
 
 def create_xls(obj):
@@ -24,7 +25,7 @@ def export_xls(ModelAdmin, request, queryset):
     files are given "date_supplier.xls" name
 
     ugly and sub-optimise but well, their is deadline
-    Also order won't be huge, so it's not aa big deal !
+    Also order won't be huge, so it's not a big deal !
 
     argh, don't know what's going on, should work, fucking lib
     """
@@ -37,8 +38,6 @@ def export_xls(ModelAdmin, request, queryset):
     #For each supplier create sheet
     for order in queryset:
         for supp in suppliers:
-            print suppliers
-            print supp.name
             if order.items.filter(supplier__name=supp.name):
 
                 ws = wb.add_sheet(supp.name)
@@ -64,7 +63,6 @@ def export_xls(ModelAdmin, request, queryset):
                 font_style.alignment.wrap = 1
 
                 for obj in order.orderitems_set.filter(item__supplier__name=supp.name):
-                    print obj
                     row_num += 1
                     row = (
                             #obj.item.category.name,
@@ -73,7 +71,6 @@ def export_xls(ModelAdmin, request, queryset):
                             obj.needed,
                             #obj.item.supplier.name,
                           )
-                    print row
                     for col_num in xrange(len(row)):
                         ws.write(row_num, col_num, row[col_num], font_style)
                 wb.save(response)
@@ -87,45 +84,35 @@ class OrderFormCurrent(forms.ModelForm):
         self.fields[u'state'] = forms.ChoiceField(choices=ORDER_CURRENT)
 
 
-class OrderFormWaiting(forms.ModelForm):
-    def __init__(self,  *args, **kwargs):
-        super(OrderFormWaiting, self).__init__(*args, **kwargs)
-        self.fields[u'state'] = forms.ChoiceField(choices=ORDER_WAITING)
-
-
 class OrderAdmin(admin.ModelAdmin):
     actions = [export_xls]
-    list_display = (u'create_date', u'state', u'order_date', u'reception_date', u'items_count')
+    list_display = (u'create_date', u'state', u'order_date', u'completion_date', u'items_count')
 
     def get_form(self, request, obj=None, **kwargs):
         """ Handle the choice given to the administator on the state's choices
 
         current -> *canceled or waiting
-        waiting -> canceld or *get
+        waiting -> canceld
 
         other transition are handeld in self.save()
         *see below*
         except for done which is handeld by OrderItems.save() on state_change
         """
-        # self.fields = [u'state', u'create_date', u'order_date', u'reception_date']
-        self.readonly_fields = [u'create_date', u'order_date', u'reception_date']
+        self.readonly_fields = [u'create_date', u'order_date', u'completion_date']
 
         if not obj == None:
             if obj.state == Order.CURRENT:
                 self.form = OrderFormCurrent
-            elif obj.state == Order.WAITING:
-                self.form = OrderFormWaiting
             else:
                 self.readonly_fields.append(u'state')
-
         return super(OrderAdmin, self).get_form(request, obj, **kwargs)
+
 
     def save_model(self, request, obj, form, change):
         """ if state change to:
             - canceled, waiting -> create a new order
             - canceled -> mark OrderItems as canceled
             - waiting -> generate command
-            - get -> mark OrderItems as get
         """
         if change == True:
             if obj.state == Order.CANCELED or obj.state == Order.WAITING:
@@ -145,11 +132,6 @@ class OrderAdmin(admin.ModelAdmin):
                     for item in obj.orderitems_set.all():
                         item.state = OrderItems.CANCELED
                         item.save()
-            elif obj.state == Order.GET:
-                obj.reception_date = datetime.now()
-                for item in obj.orderitems_set.all():
-                    item.state = OrderItems.GET
-                    item.save()
         obj.save()
 
 
@@ -158,25 +140,53 @@ class ItemForms(forms.ModelForm):
     Meta = select2_modelform_meta(OrderItems)
 
     def clean(self):
-        """ add validation on form level, nicer for the user than an integrity error"""
-
-        # add validator for ro fields ???
+        """ add validation on form level, nicer for the user than an integrity error.
+        Also, provide special user "tous" as a default value for "for_user" field.
+        Done here as Django check constraint for each field provided with the form
+        """
         order = Order.objects.get(state__startswith=Order.CURRENT)
+
+        if not self.cleaned_data['for_user']:
+            self.cleaned_data['for_user'] = User.objects.get(username__startswith=u'tous')
         if u'item' in self.cleaned_data and self.cleaned_data['item'] in order.items.all():
-            msg = u'%s est déjà dans la facture courante, veuillez sélectionnez un autre produit' % self.cleaned_data['item']
+            msg = u'%s est déjà dans la facture courante, veuillez sélectionnez un autre produit' \
+                    % self.cleaned_data['item']
             raise forms.ValidationError(msg)
         return self.cleaned_data
 
 
 class OrderItemsAdmin(admin.ModelAdmin):
-    """ Handles Items addition and actions
-    user action, copy to current order
-    items action, available when a command has arrived, mark as * """
+    """ Handles Items addition and actions"""
 
     form = ItemForms
-    actions = [u'copy_items', u'mark_as_stock', u'mark_as_missing', u'mark_as_canceled']
+    list_display = (u'my_item', u'item__quantity', u'needed', u'state', u'order_data', u'for_user')
+    list_display_links = None
+    search_fields = (u'for_user__username', u'item__name',)
     list_filter = (u'for_user', 'state', u'order_data')
-    list_display = (u'item', u'needed', u'state', u'order_data', u'for_user')
+    preserve_filters = True
+
+
+    def my_item(self, instance):
+        if instance.state == OrderItems.CURRENT:
+            return u'<a href="./' + str(instance.id) + '" >' + instance.item.name + u'</a>'
+        return instance.item.name
+    my_item.allow_tags=True
+
+    def item__quantity(self, instance):
+        return instance.item.quantity
+    item__quantity.short_description = u'Quantitée par lot'
+
+
+    def changelist_view(self, request, extra_context = None):
+        """ set current order as default filter
+        Note, I should reverse url instead of harcoding it """
+        test = request.META.get('HTTP_REFERER', u'').split(request.META['PATH_INFO'])
+
+        if test[-1] and not test[-1].startswith(u'?'):
+            if u'order_data__id__exact' not in request.GET:
+                current_order_id = Order.objects.get(state__startswith=Order.CURRENT).id
+                return HttpResponseRedirect(u'/admin/main/orderitems/?order_data__id__exact=' + str(current_order_id))
+        return super(OrderItemsAdmin, self).changelist_view(request, extra_context=extra_context)
 
     def get_form(self, request, obj=None, **kwargs):
         self.exclude = []
@@ -192,11 +202,13 @@ class OrderItemsAdmin(admin.ModelAdmin):
         self.exclude.append(u'user')
         return super(OrderItemsAdmin, self).get_form(request, obj, **kwargs)
 
+
     def has_change_permission(self, request, obj=None):
         """ disable form depending on the object state"""
         if obj is not None and obj.order_data.state != Order.CURRENT:
             return False
         return super(OrderItemsAdmin, self).has_change_permission(request, obj)
+
 
     def save_model(self, request, obj, form, change):
         """
@@ -206,8 +218,6 @@ class OrderItemsAdmin(admin.ModelAdmin):
         - if new, add it to the last order
         """
         obj.user = request.user
-        if not obj.for_user:
-            obj.for_user = request.user
         if change == False:
             current_order = Order.objects.get(state__startswith=Order.CURRENT)
             obj.order_data = current_order
@@ -220,7 +230,8 @@ class OrderItemsAdmin(admin.ModelAdmin):
         i = 0
         for obj in queryset:
             if obj.order_data == current_order or obj.item in current_order.items.all():
-                self.message_user(request, u'%s est déjà dans la facture courante, veuillez plutôt l\'éditer' % obj.item, u'error')
+                self.message_user(request, \
+                        u'%s est déjà dans la facture courante, veuillez plutôt l\'éditer' % obj.item, u'error')
             else:
                 item = OrderItems()
                 item.state = OrderItems.CURRENT
@@ -236,45 +247,101 @@ class OrderItemsAdmin(admin.ModelAdmin):
     def mark_as_stock(self, request, queryset):
         i = 0
         for obj in queryset:
-            if obj.order_data.state == OrderItems.GET:
+            if obj.order_data.state == Order.WAITING and obj.state == OrderItems.GET:
                 obj.state = OrderItems.DONE
                 obj.save()
                 i += 1
             else:
-                self.message_user(request, u'%s n\'est pas dans une commande reçue' % obj.item, u'error')
+                self.message_user(request, u'%s n\'est pas dans les objets reçues' % obj.item, u'error')
         self.message_user(request, u'%d objet stockés' % i)
 
 
     def mark_as_missing(self, request, queryset):
         i = 0
         for obj in queryset:
-            if obj.order_data.state == OrderItems.GET:
+            if obj.order_data.state == Order.WAITING and obj.state in (OrderItems.WAITING, OrderItems.CANCELED,):
                 obj.state = OrderItems.MISSING
                 obj.save()
                 i += 1
             else:
-                self.message_user(request, u'%s n\'est pas dans une commande reçue' % obj.item, u'error')
-        self.message_user(request, u'%d objet stockés' % i)
+                self.message_user(request, u'%s n\'est pas dans les objets en attente de réception' % obj.item, u'error')
+        self.message_user(request, u'%d objet(s) manquant(s)' % i)
+
+
+    def mark_as_waiting(self, request, queryset):
+        i = 0
+        for obj in queryset:
+            if obj.order_data.state == Order.WAITING:
+                obj.state = OrderItems.WAITING
+                obj.save()
+                i += 1
+            else:
+                self.message_user(request, u'%s n\'est pas dans une facture à traiter' % obj.item, u'error')
+        self.message_user(request, u'%d objet(s) passé(s) en attente' % i)
 
 
     def mark_as_canceled(self, request, queryset):
         i = 0
         for obj in queryset:
-            if obj.order_data.state == OrderItems.GET:
-                obj.state = OrderItems.MISSING
+            if obj.order_data.state == Order.WAITING:
+                obj.state = OrderItems.CANCELED
+                obj.save()
+                i += 1
+                send_mail(u'Commande anulée',\
+                        u'La commande de ' + obj.item.__unicode__() + u' a été anulée', request.user.email, \
+                        [obj.for_user.email] if obj.for_user.username != u'tous' else\
+                        [user.email for user in Group.objects.get(name__startswith=u'utilisateur').user_set.all()]\
+                        , fail_silently=False
+                )
+            else:
+                self.message_user(request, u'%s n\'est pas dans une commande non traitée' % obj.item, u'error')
+        self.message_user(request, u'%d objet(s) annulée(s)' % i)
+
+
+    def mark_as_get(self, request, queryset):
+        i = 0
+        for obj in queryset:
+            if obj.order_data.state == Order.WAITING and obj.state in (OrderItems.WAITING, OrderItems.CANCELED,):
+                obj.state = OrderItems.GET
                 obj.save()
                 i += 1
             else:
-                self.message_user(request, u'%s n\'est pas dans une commande reçue' % obj.item, u'error')
-        self.message_user(request, u'%d objet annulée(s)' % i)
+                self.message_user(request, u'%s n\'est pas en attente de réception' % obj.item, u'error')
+        self.message_user(request, u'%d objet reçue(s)' % i)
 
+    def get_actions(self, request):
+        """ filter available actions depending on the user """
+        actions = super(OrderItemsAdmin, self).get_actions(request)
+        if u'responsables commandes' == request.user.groups.all()[0].name or request.user.is_superuser:
+            pass
+        else:
+            del actions[u'mark_as_canceled']
+        return actions
+
+
+    actions = [u'copy_items', u'mark_as_stock', u'mark_as_missing', u'mark_as_get', u'mark_as_canceled', u'mark_as_waiting']
     copy_items.short_description = u'copier vers la facture en cours'
     mark_as_stock.short_description = u'marquer comme stockées'
     mark_as_missing.short_description = u'marquer comme manquants'
     mark_as_canceled.short_description = u'marquer comme annulées'
+    mark_as_waiting.short_description = u'marquer comme en attentes'
+    mark_as_get.short_description = u'marquer comme reçues'
+
+
+class ItemAdmin(admin.ModelAdmin):
+    list_display = (u'name', u'ref', u'quantity', u'stockage_modality', u'category', u'supplier',)
+    list_filter = (u'category__name', u'supplier__name',)
+    search_fields = (u'name', u'category__name', u'supplier__name',)
+
+
+class SupplierAdmin(admin.ModelAdmin):
+    list_display = (u'name', u'website', u'adress',)
+    list_filter = (u'name', u'website', u'adress',)
+    search_fields = (u'name', u'website', u'adress',)
+
 
 admin.site.register(Category)
-admin.site.register(Supplier)
-admin.site.register(Item)
+admin.site.register(Supplier, SupplierAdmin)
+admin.site.register(Item, ItemAdmin)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(OrderItems, OrderItemsAdmin)

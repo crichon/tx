@@ -2,6 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 
+from datetime import datetime
 
 class Category(models.Model):
     name = models.CharField('categorie', max_length=50)
@@ -26,9 +27,9 @@ class Supplier(models.Model):
 
 
 class Item(models.Model):
-    category = models.ForeignKey(Category, null=True, blank=True)
-    supplier = models.ForeignKey(Supplier, null=True, blank=True)
-    ref = models.CharField(u"référence", max_length=50)
+    category = models.ForeignKey(Category, null=True, blank=True, verbose_name=u'Catégories')
+    supplier = models.ForeignKey(Supplier, verbose_name=u'Fournisseur')
+    ref = models.CharField(u'référence', max_length=50)
     name = models.CharField(u'identifiant', max_length=50)
     quantity = models.CharField(u'quantité/volume', max_length=50)
     place = models.CharField(u'lieu de stockage', max_length=50)
@@ -39,7 +40,7 @@ class Item(models.Model):
 
 
     def __unicode__(self):
-        return self.name
+        return self.name  + u', ref: ' + self.ref
 
 
 class Order(models.Model):
@@ -48,21 +49,21 @@ class Order(models.Model):
     DONE = u'D'
     CANCELED = u'CA'
     WAITING = u'W'
-    GET = u'G'
+#    GET = u'G'
 
     ORDER_STATE = (
             (CURRENT, u'en cours'),
             (DONE, u'archivée'),
             (CANCELED, u'annulée'),
             (WAITING, u'en attente de réception'),
-            (GET, u'reçue'),
+            #(GET, u'reçue'),
     )
 
     items = models.ManyToManyField(Item, through='OrderItems')
     state = models.CharField(u'état', max_length=50, choices=ORDER_STATE, default=CURRENT)
     create_date = models.DateField(u'date de création', auto_now_add=True)
-    order_date = models.DateField(u'date d\'envoie de la commande', null=True, blank=True)
-    reception_date = models.DateField(u'Date de réception de la commande', null=True, blank=True)
+    order_date = models.DateField(u'date d\'envoie', null=True, blank=True)
+    completion_date = models.DateField(u'Date d\'archivage', null=True, blank=True)
 
     def items_count(self):
         return self.orderitems_set.count()
@@ -72,7 +73,7 @@ class Order(models.Model):
         return 'commande du ' + self.create_date.strftime('%d/%m/%Y') + u', ' + self.get_state_display()
 
     class Meta:
-        verbose_name = u'Commande'
+        verbose_name = u'Validation des commande'
 
 
 class OrderItems(models.Model):
@@ -97,7 +98,8 @@ class OrderItems(models.Model):
     item = models.ForeignKey(Item, verbose_name=u'objet')
     needed = models.IntegerField(verbose_name=u'quantité à commander', default=0)
     state = models.CharField(verbose_name=u'état', max_length=50, choices=ITEM_STATE)
-    for_user = models.ForeignKey(User, related_name=u'OrderItems_for_user', verbose_name=u'pour', blank=True, null=True) # related name needed to help django manage multiple foreign keys on the same table
+    for_user = models.ForeignKey(User, related_name=u'OrderItems_for_user', verbose_name=u'pour', blank=True)
+ # related name needed to help django manage multiple foreign keys on the same table
     user = models.ForeignKey(User, verbose_name=u'utilisateur')
     last_edited = models.DateField(u'date de création', auto_now=True)
 
@@ -112,15 +114,12 @@ class OrderItems(models.Model):
         done = True
         if self.order_data.orderitems_set.all():
             for item in self.order_data.orderitems_set.all():
-                print item.state
                 if item.state not in (self.CANCELED, self.DONE, self.MISSING):
-                    print item
                     done = False
         else:
-            print "heu ?"
             done = False
         if done:
-            print "wtf"
+            self.order_data.completion_date = datetime.now()
             self.order_data.state = Order.DONE
             self.order_data.save()
 

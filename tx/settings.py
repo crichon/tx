@@ -10,30 +10,24 @@ https://docs.djangoproject.com/en/1.6/ref/settings/
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 import os
-BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-root = os.path.dirname(os.path.dirname(__file__)).replace('\\','/')
-MEDIA_ROOT = root + '/../media/'
-STATIC_ROOT = 'staticfiles'
+BASE_DIR = os.path.dirname(os.path.dirname(__file__))
+#root = os.path.dirname(os.path.dirname(__file__)).replace('\\','/')
+#MEDIA_ROOT = root + '/../media/'
+STATIC_ROOT = '/home/tx/staticfiles'
 STATIC_URL = '/static/'
 STATIC_DIRS = (os.path.join(BASE_DIR, u'static'),)
-TEMPLATE_DIRS = (
-        root + '/../templates'
-)
 
-#TEMPLATE_DIR = [os.path.join(BASE_DIR, 'templates')]
+TEMPLATE_DIR = [os.path.join(BASE_DIR, 'templates')]
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
-# SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '7-)l_n0-y^e%-4!0ugm8w=s!dt-037a3h72n^#isu&uxj+m8w-'
-
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = True
+DEBUG = False 
 
-TEMPLATE_DEBUG = True
+TEMPLATE_DEBUG = False
 
-ALLOWED_HOSTS = []
+ALLOWED_HOSTS = [u'localhost', u'176.ip-92-222-19.eu']
 
 
 # Application definition
@@ -75,6 +69,7 @@ DATABASES = {
 }
 
 #DATABASES = {
+<<<<<<< HEAD
 #    'default': {
 #        'ENGINE': 'django.db.backends.postgresql_psygcopg2',
 #        'NAME': 'daqkph7qnc6bhv',
@@ -83,6 +78,16 @@ DATABASES = {
 #        'PORT': 5432,
 #        'HOST': 'ec2-54-204-24-154.compute-1.amazonaws.com',
 #    }
+=======
+#  'default': {
+#    'ENGINE': 'django.db.backends.postgresql_psycopg2',
+#    'NAME': 'daqkph7qnc6bhv',
+#    'HOST': 'ec2-54-204-24-154.compute-1.amazonaws.com',
+#    'PORT': 5432,
+#    'USER': 'nemfikadudwjsz',
+#    'PASSWORD': 'Gr9gqlwARMacBLpeo3nPhbe8Fz'
+#  }
+>>>>>>> d50a2be87c89dcc3577f18591e4e7b85397239a8
 #}
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
@@ -98,4 +103,4 @@ USE_L10N = True
 
 USE_TZ = True
 
-
+EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
