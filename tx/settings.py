@@ -69,7 +69,6 @@ DATABASES = {
 }
 
 #DATABASES = {
-<<<<<<< HEAD
 #    'default': {
 #        'ENGINE': 'django.db.backends.postgresql_psygcopg2',
 #        'NAME': 'daqkph7qnc6bhv',
@@ -78,16 +77,6 @@ DATABASES = {
 #        'PORT': 5432,
 #        'HOST': 'ec2-54-204-24-154.compute-1.amazonaws.com',
 #    }
-=======
-#  'default': {
-#    'ENGINE': 'django.db.backends.postgresql_psycopg2',
-#    'NAME': 'daqkph7qnc6bhv',
-#    'HOST': 'ec2-54-204-24-154.compute-1.amazonaws.com',
-#    'PORT': 5432,
-#    'USER': 'nemfikadudwjsz',
-#    'PASSWORD': 'Gr9gqlwARMacBLpeo3nPhbe8Fz'
-#  }
->>>>>>> d50a2be87c89dcc3577f18591e4e7b85397239a8
 #}
 # Internationalization
 # https://docs.djangoproject.com/en/1.6/topics/i18n/
