@@ -5,10 +5,11 @@ from django.contrib.auth.models import User
 from datetime import datetime
 
 class Category(models.Model):
-    name = models.CharField('categorie', max_length=50)
+    name = models.CharField(u'categorie', max_length=50)
 
     class Meta:
         verbose_name = u'Catégorie'
+        ordering = ["name"]
 
     def __unicode__(self):
         return self.name
@@ -21,6 +22,7 @@ class Supplier(models.Model):
 
     class Meta:
         verbose_name = u'Fournisseur'
+        ordering = ["name"]
 
     def __unicode__(self):
         return self.name
@@ -37,6 +39,7 @@ class Item(models.Model):
 
     class Meta:
         verbose_name = u'produit'
+        ordering = ["name"]
 
 
     def __unicode__(self):
@@ -87,11 +90,11 @@ class OrderItems(models.Model):
 
     ITEM_STATE = (
             (CURRENT, u'en attente de validation'),
-            (CANCELED, u'annulée'),
-            (DONE, u'stocké'),
             (WAITING, u'en attente de réception'),
-            (MISSING, u'manquant'),
             (GET, u'reçu, à stocker'),
+            (DONE, u'stocké'),
+            (MISSING, u'manquant'),
+            (CANCELED, u'annulée'),
     )
 
     order_data = models.ForeignKey(Order, verbose_name=u'commande')

@@ -320,7 +320,7 @@ class OrderItemsAdmin(admin.ModelAdmin):
 
 
     actions = [u'copy_items', u'mark_as_stock', u'mark_as_missing', u'mark_as_get', u'mark_as_canceled', u'mark_as_waiting']
-    copy_items.short_description = u'copier vers la facture en cours'
+    copy_items.short_description = u'copier vers la commande en cours'
     mark_as_stock.short_description = u'marquer comme stockées'
     mark_as_missing.short_description = u'marquer comme manquants'
     mark_as_canceled.short_description = u'marquer comme annulées'
@@ -330,7 +330,7 @@ class OrderItemsAdmin(admin.ModelAdmin):
 
 class ItemAdmin(admin.ModelAdmin):
     list_display = (u'name', u'ref', u'quantity', u'stockage_modality', u'category', u'supplier',)
-    list_filter = (u'category__name', u'supplier__name',)
+    list_filter = (u'category', u'supplier',)
     search_fields = (u'name', u'category__name', u'supplier__name',)
 
 
