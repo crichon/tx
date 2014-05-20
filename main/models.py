@@ -31,7 +31,7 @@ class Item(models.Model):
     supplier = models.ForeignKey(Supplier, verbose_name=u'Fournisseur')
     ref = models.CharField(u'référence', max_length=50)
     name = models.CharField(u'identifiant', max_length=50)
-    quantity = models.CharField(u'quantité/volume', max_length=50)
+    quantity = models.CharField(u'quantité par unité de vente', max_length=50)
     place = models.CharField(u'lieu de stockage', max_length=50)
     stockage_modality = models.CharField(u'modalité de stockage', max_length=50, null=True, blank=True)
 
