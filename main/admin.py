@@ -176,10 +176,12 @@ class OrderItemsAdmin(admin.ModelAdmin):
         return instance.item.quantity
     item__quantity.short_description = u'Quantitée par lot'
 
+    def item__supplier(self, instance):
+        return instance.item.supplier.name
 
     def changelist_view(self, request, extra_context = None):
         """ set current order as default filter
-        Note, I should reverse url instead of harcoding it """
+        todo, I should reverse url instead of harcoding it """
         test = request.META.get('HTTP_REFERER', u'').split(request.META['PATH_INFO'])
 
         if test[-1] and not test[-1].startswith(u'?'):
@@ -199,6 +201,8 @@ class OrderItemsAdmin(admin.ModelAdmin):
             self.readonly_fields.append(u'item')
             self.readonly_fields.append(u'state')
 
+        self.readonly_fields.append(u'item__quantity')
+        self.readonly_fields.append(u'item__supplier')
         self.exclude.append(u'user')
         return super(OrderItemsAdmin, self).get_form(request, obj, **kwargs)
 
