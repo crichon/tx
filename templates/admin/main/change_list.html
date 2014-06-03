@@ -2,11 +2,16 @@
 {% extends "admin/change_list.html" %}
 {% load i18n admin_urls admin_static admin_list %}
 
-          {% block object-tools-items %}
-            <li>
-              {% url cl.opts|admin_urlname:'add' as add_url %}
-              <a href="{% add_preserved_filters add_url is_popup to_field %}" class="addlink">
-                Ajouter un objet à la commande en cours
-              </a>
-            </li>
-          {% endblock %}
+{% block pagination %}
+
+<p class="paginator">
+{% if pagination_required %}
+{% for i in page_range %}
+    {% paginator_number cl i %}
+{% endfor %}
+{% endif %}
+{{ cl.result_count }} {% ifequal cl.result_count 1 %}{{ cl.opts.verbose_name }}{% else %}{{ cl.opts.verbose_name_plural }}{% endifequal %}
+{% if show_all_url %}&nbsp;&nbsp; Page<a href="{{ show_all_url }}" class="showall">{% trans 'Show all' %}</a>{% endif %}
+{% if cl.formset and cl.result_count %}<input type="submit" name="_save" class="default" value="{% trans 'Save' %}"/>{% endif %}
+</p>
+{% pagination cl %}{% endblock %}

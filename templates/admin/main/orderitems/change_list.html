@@ -1,0 +1,19 @@
+
+{% extends "admin/change_list.html" %}
+{% load i18n admin_urls admin_static admin_list %}
+
+
+{% block content_title%}
+<h4 style="text-align: center;">
+Cliquez sur une categorie pour la modifier
+</h4>
+{% endblock %}
+{% block object-tools-items %}
+<li>
+{% url cl.opts|admin_urlname:'add' as add_url %}
+<button href="{% add_preserved_filters add_url is_popup to_field %}" style="float=left;" class="addlink btn btn-primary default">
+	Ajouter un objet à la commande en cours
+</button>
+</li>
+{% endblock %}
+
