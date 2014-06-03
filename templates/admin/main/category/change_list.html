@@ -4,18 +4,15 @@
 
 
 {% block content_title%}
-<h5 style="text-align: center;">
-Cliquez sur produit pour modifier la quantite
-</h5>
-<h5 style="text-align: center;">
-Selectionnez un produit pour modifier son etat
-</h5>
+<h4 style="text-align: center;">
+Cliquez sur une categorie pour la modifier
+</h4>
 {% endblock %}
 {% block object-tools-items %}
 <li>
 {% url cl.opts|admin_urlname:'add' as add_url %}
 <button href="{% add_preserved_filters add_url is_popup to_field %}" style="float=left;" class="addlink btn btn-primary default">
-	Ajouter un objet à la commande en cours
+	Ajouter une categorie 
 </button>
 </li>
 {% endblock %}
