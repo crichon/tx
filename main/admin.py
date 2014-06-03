@@ -171,15 +171,18 @@ class OrderItemsAdmin(admin.ModelAdmin):
             return u'<a href="./' + str(instance.id) + '" >' + instance.item.name + u'</a>'
         return instance.item.name
     my_item.allow_tags=True
+    my_item.short_description = u'Commande'
 
     def item__quantity(self, instance):
         return instance.item.quantity
     item__quantity.short_description = u'Quantitée par lot'
 
+    def item__supplier(self, instance):
+        return instance.item.supplier.name
 
     def changelist_view(self, request, extra_context = None):
         """ set current order as default filter
-        Note, I should reverse url instead of harcoding it """
+        todo, I should reverse url instead of harcoding it """
         test = request.META.get('HTTP_REFERER', u'').split(request.META['PATH_INFO'])
 
         if test[-1] and not test[-1].startswith(u'?'):
@@ -199,6 +202,8 @@ class OrderItemsAdmin(admin.ModelAdmin):
             self.readonly_fields.append(u'item')
             self.readonly_fields.append(u'state')
 
+        self.readonly_fields.append(u'item__quantity')
+        self.readonly_fields.append(u'item__supplier')
         self.exclude.append(u'user')
         return super(OrderItemsAdmin, self).get_form(request, obj, **kwargs)
 
@@ -320,7 +325,7 @@ class OrderItemsAdmin(admin.ModelAdmin):
 
 
     actions = [u'copy_items', u'mark_as_stock', u'mark_as_missing', u'mark_as_get', u'mark_as_canceled', u'mark_as_waiting']
-    copy_items.short_description = u'copier vers la facture en cours'
+    copy_items.short_description = u'copier vers la commande en cours'
     mark_as_stock.short_description = u'marquer comme stockées'
     mark_as_missing.short_description = u'marquer comme manquants'
     mark_as_canceled.short_description = u'marquer comme annulées'
@@ -330,7 +335,7 @@ class OrderItemsAdmin(admin.ModelAdmin):
 
 class ItemAdmin(admin.ModelAdmin):
     list_display = (u'name', u'ref', u'quantity', u'stockage_modality', u'category', u'supplier',)
-    list_filter = (u'category__name', u'supplier__name',)
+    list_filter = (u'category', u'supplier',)
     search_fields = (u'name', u'category__name', u'supplier__name',)
 
 
@@ -340,6 +345,71 @@ class SupplierAdmin(admin.ModelAdmin):
     search_fields = (u'name', u'website', u'adress',)
 
 
+from django.contrib.admin.models import LogEntry, DELETION
+from django.utils.html import escape
+from django.core.urlresolvers import reverse
+
+
+class LogEntryAdmin(admin.ModelAdmin):
+
+    date_hierarchy = 'action_time'
+
+    def get_actions(self, request):
+        actions = []
+        return actions
+
+    #readonly_fields = LogEntry._meta.get_all_field_names()
+
+    list_filter = [
+        'user',
+        'content_type',
+        'action_flag'
+    ]
+
+    search_fields = [
+        'object_repr',
+        'change_message'
+    ]
+
+
+    list_display = [
+        'action_time',
+        'user',
+        'content_type',
+        'object_link',
+        'action_flag',
+        'change_message',
+    ]
+
+    def has_add_permission(self, request):
+        return False
+
+    def has_change_permission(self, request, obj=None):
+        return request.user.is_staff and request.method != 'POST'
+
+    def has_delete_permission(self, request, obj=None):
+        return False
+
+    def object_link(self, obj):
+        if obj.action_flag == DELETION:
+            link = escape(obj.object_repr)
+        else:
+            ct = obj.content_type
+            link = u'<a href="%s">%s</a>' % (
+                reverse('admin:%s_%s_change' % (ct.app_label, ct.model), args=[obj.object_id]),
+                escape(obj.object_repr),
+            )
+        return link
+    object_link.allow_tags = True
+    object_link.admin_order_field = 'object_repr'
+    object_link.short_description = u'object'
+
+    def queryset(self, request):
+        return super(LogEntryAdmin, self).queryset(request) \
+            .prefetch_related('content_type')
+
+
+admin.site.register(LogEntry, LogEntryAdmin)
 admin.site.register(Category)
 admin.site.register(Supplier, SupplierAdmin)
 admin.site.register(Item, ItemAdmin)

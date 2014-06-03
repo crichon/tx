@@ -13,20 +13,20 @@ import os
 BASE_DIR = os.path.dirname(os.path.dirname(__file__))
 #root = os.path.dirname(os.path.dirname(__file__)).replace('\\','/')
 #MEDIA_ROOT = root + '/../media/'
-STATIC_ROOT = '/home/tx/staticfiles'
+STATIC_ROOT = os.path.join(BASE_DIR, 'static')
 STATIC_URL = '/static/'
 STATIC_DIRS = (os.path.join(BASE_DIR, u'static'),)
 
-TEMPLATE_DIR = [os.path.join(BASE_DIR, 'templates')]
+TEMPLATE_DIRS = (os.path.join(BASE_DIR, 'templates'), )
 
 # Quick-start development settings - unsuitable for production
 # See https://docs.djangoproject.com/en/1.6/howto/deployment/checklist/
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False 
+DEBUG = True
 
-TEMPLATE_DEBUG = False
-
+TEMPLATE_DEBUG = True
+SECRET_KEY = '7-)l_n0-y^e%-4!0ugm8w=s!dt-037a3h72n^#isu&uxj+m8w-'
 ALLOWED_HOSTS = [u'localhost', u'176.ip-92-222-19.eu']
 
 
@@ -41,6 +41,7 @@ INSTALLED_APPS = (
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'django_extensions',
     'main',
 )
 

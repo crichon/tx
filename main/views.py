@@ -1,17 +1,18 @@
+from django.contrib.auth.models import User, Group
 from django.shortcuts import render
 from django.http import HttpResponse
 
 from main.models import Item, Supplier, Category
 from  xlrd import open_workbook
-import pdb
+
+
 def index(request):
-	return HttpResponse("Commande courrante ?")
+	return HttpResponse("Soon available")
 
 def toolbox(request):
 	#TODO: get downloaded in toolbox
-	importItem('./listeProduits.xlsx') 
-	return HttpResponse("Bienvenu dans la toolbox")
-# Create your views here.
+	importItem('./listeProduits.xlsx')
+	return HttpResponse("Initialisation terminee")
 
 def importItem(file_path):
 
@@ -33,5 +34,4 @@ def importItem(file_path):
 		item_ref = current_supplier= r_sheet.cell(row_index, 3).value
 		item, created = Item.objects.get_or_create(ref=item_ref, name=item_name, category=item_category, supplier=item_supplier)
 
-		
 
