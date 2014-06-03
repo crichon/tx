@@ -358,7 +358,7 @@ class LogEntryAdmin(admin.ModelAdmin):
         actions = []
         return actions
 
-    readonly_fields = LogEntry._meta.get_all_field_names()
+    #readonly_fields = LogEntry._meta.get_all_field_names()
 
     list_filter = [
         'user',
