@@ -88,6 +88,11 @@ class OrderAdmin(admin.ModelAdmin):
     actions = [export_xls]
     list_display = (u'create_date', u'state', u'order_date', u'completion_date', u'items_count')
 
+    def get_actions(self, request):
+        super(OrderAdmin, self).get_actions(request)
+        if not request.user.is_superuser:
+            del actions[u'delete_selected']
+
     def get_form(self, request, obj=None, **kwargs):
         """ Handle the choice given to the administator on the state's choices
 
@@ -334,10 +339,12 @@ class OrderItemsAdmin(admin.ModelAdmin):
 
 
 class ItemAdmin(admin.ModelAdmin):
-    list_display = (u'name', u'ref', u'quantity', u'stockage_modality', u'category', u'supplier',)
+    list_display = (u'name', u'ref', u'quantity', u'stockage_modality',
+            u'category', u'supplier', u'in_stock', u'out_stock')
     list_filter = (u'category', u'supplier',)
     search_fields = (u'name', u'category__name', u'supplier__name',)
-
+    list_editable = (u'out_stock', )
+    readonly_fields = (u'in_stock', u'out_stock', )
 
 class SupplierAdmin(admin.ModelAdmin):
     list_display = (u'name', u'website', u'adress',)
