@@ -11,9 +11,9 @@ Cliquez sur une categorie pour la modifier
 {% block object-tools-items %}
 <li>
 {% url cl.opts|admin_urlname:'add' as add_url %}
-<button href="{% add_preserved_filters add_url is_popup to_field %}" style="float=left;" class="addlink btn btn-primary default">
+<a href="{% add_preserved_filters add_url is_popup to_field %}" style="float=left;" class="addlink btn btn-primary default">
 	Ajouter une categorie 
-</button>
+</a>
 </li>
 {% endblock %}
 
