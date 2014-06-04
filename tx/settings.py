@@ -35,6 +35,7 @@ ALLOWED_HOSTS = [u'localhost', u'176.ip-92-222-19.eu']
 INSTALLED_APPS = (
     'django_admin_bootstrapped.bootstrap3',
     'django_admin_bootstrapped',
+    'easy_select2',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',

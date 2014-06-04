@@ -85,13 +85,15 @@ class OrderFormCurrent(forms.ModelForm):
 
 
 class OrderAdmin(admin.ModelAdmin):
+    list_per_page = 50
     actions = [export_xls]
     list_display = (u'create_date', u'state', u'order_date', u'completion_date', u'items_count')
 
     def get_actions(self, request):
-        super(OrderAdmin, self).get_actions(request)
+        actions = super(OrderAdmin, self).get_actions(request)
         if not request.user.is_superuser:
             del actions[u'delete_selected']
+        return actions
 
     def get_form(self, request, obj=None, **kwargs):
         """ Handle the choice given to the administator on the state's choices
@@ -163,8 +165,9 @@ class ItemForms(forms.ModelForm):
 class OrderItemsAdmin(admin.ModelAdmin):
     """ Handles Items addition and actions"""
 
+    list_per_page = 50
     form = ItemForms
-    list_display = (u'my_item', u'item__quantity', u'needed', u'state', u'order_data', u'for_user')
+    list_display = (u'my_item', u'item__quantity', u'item__supplier', u'needed', u'state', u'order_data', u'for_user')
     list_display_links = None
     search_fields = (u'for_user__username', u'item__name',)
     list_filter = (u'for_user', 'state', u'order_data')
@@ -184,6 +187,7 @@ class OrderItemsAdmin(admin.ModelAdmin):
 
     def item__supplier(self, instance):
         return instance.item.supplier.name
+    item__quantity.short_description = u'Fournisseur'
 
     def changelist_view(self, request, extra_context = None):
         """ set current order as default filter
@@ -339,14 +343,21 @@ class OrderItemsAdmin(admin.ModelAdmin):
 
 
 class ItemAdmin(admin.ModelAdmin):
+    list_per_page = 50
     list_display = (u'name', u'ref', u'quantity', u'stockage_modality',
-            u'category', u'supplier', u'in_stock', u'out_stock')
+            u'category', u'supplier', u'in_stock', u'out_stock', u'current', )
     list_filter = (u'category', u'supplier',)
     search_fields = (u'name', u'category__name', u'supplier__name',)
     list_editable = (u'out_stock', )
-    readonly_fields = (u'in_stock', u'out_stock', )
+    readonly_fields = (u'in_stock', u'out_stock', u'current', )
+
+    def current(self, instance):
+        return instance.in_stock - instance.out_stock
+    #current.allow_tags=True
+    current.short_description = u'en stock, par unité de vente'
 
 class SupplierAdmin(admin.ModelAdmin):
+    list_per_page = 50
     list_display = (u'name', u'website', u'adress',)
     list_filter = (u'name', u'website', u'adress',)
     search_fields = (u'name', u'website', u'adress',)
@@ -360,6 +371,7 @@ from django.core.urlresolvers import reverse
 class LogEntryAdmin(admin.ModelAdmin):
 
     date_hierarchy = 'action_time'
+    list_display_links = None
 
     def get_actions(self, request):
         actions = []

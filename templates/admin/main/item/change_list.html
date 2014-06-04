@@ -8,16 +8,22 @@
 
 // should be checked on the server side too
 $(document).ready(function(){
-    $('.vIntegerField').each( function() {
-            var val = parseInt($(this).val());
-            $(this).spinner({
+    $('.field-out_stock').each( function() {
+        var val = parseInt($(this).parent().find('.field-in_stock').text());
+        console.log(val);
+        $(this).parent().find('.vIntegerField').spinner({
             step: 1,
-            max: val,
             min: 0,
-            numberFormat: "n" });
+            max: val,
+            numberFormat: "n" 
         });
-    }
-);
+    });
+
+    $('.pagination').find('ul>li>').each( function() {
+        var val = $(this).text();
+        $(this).text("Page " + val); 
+    });
+});
 
 </script>
 {{ media }}
