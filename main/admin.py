@@ -282,18 +282,6 @@ class OrderItemsAdmin(admin.ModelAdmin):
         self.message_user(request, u'%d objet(s) manquant(s)' % i)
 
 
-    def mark_as_waiting(self, request, queryset):
-        i = 0
-        for obj in queryset:
-            if obj.order_data.state == Order.WAITING:
-                obj.state = OrderItems.WAITING
-                obj.save()
-                i += 1
-            else:
-                self.message_user(request, u'%s n\'est pas dans une facture à traiter' % obj.item, u'error')
-        self.message_user(request, u'%d objet(s) passé(s) en attente' % i)
-
-
     def mark_as_canceled(self, request, queryset):
         i = 0
         for obj in queryset:
@@ -323,22 +311,36 @@ class OrderItemsAdmin(admin.ModelAdmin):
                 self.message_user(request, u'%s n\'est pas en attente de réception' % obj.item, u'error')
         self.message_user(request, u'%d objet reçue(s)' % i)
 
+    copy_items.short_description = u'copier vers la commande en cours'
+
+
     def get_actions(self, request):
-        """ filter available actions depending on the user """
+        """ filter available actions depending on the user and the command state"""
         actions = super(OrderItemsAdmin, self).get_actions(request)
-        if u'responsables commandes' == request.user.groups.all()[0].name or request.user.is_superuser:
-            pass
+
+        pk = request.GET.get(u'order_data__id__exact', 0)
+        if pk != 0:
+            order = Order.objects.get(pk=pk)
+            if order.state == Order.WAITING:
+                pass
+            else:
+                del actions[u'mark_as_get']
+                del actions[u'mark_as_stock']
+
+        if u'responsables commandes' == request.user.groups.all()[0].name \
+                and order.state == Order.WAITING:
+                    pass
         else:
-            del actions[u'mark_as_canceled']
+            del actions['mark_as_canceled']
+            del actions['mark_as_missing']
         return actions
 
 
-    actions = [u'copy_items', u'mark_as_stock', u'mark_as_missing', u'mark_as_get', u'mark_as_canceled', u'mark_as_waiting']
+    actions = [u'copy_items', u'mark_as_stock', u'mark_as_missing', u'mark_as_get', u'mark_as_canceled']
     copy_items.short_description = u'copier vers la commande en cours'
     mark_as_stock.short_description = u'marquer comme stockées'
     mark_as_missing.short_description = u'marquer comme manquants'
     mark_as_canceled.short_description = u'marquer comme annulées'
-    mark_as_waiting.short_description = u'marquer comme en attentes'
     mark_as_get.short_description = u'marquer comme reçues'
 
 
