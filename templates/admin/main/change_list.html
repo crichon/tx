@@ -1,19 +1,20 @@
-
 {% extends "admin/change_list.html" %}
-{% load i18n admin_urls admin_static admin_modify %}
+{% load i18n admin_urls admin_static admin_list %}
 
 {% block extrahead %}{{ block.super }}
 <script src="//code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
 <script type="text/javascript" src="{% url 'admin:jsi18n' %}"></script>
 <script type="text/javascript">
 
-// should be checked on the server side too
+// Dirty ui quick fix
 $(document).ready(function(){
+    
     $('.pagination').find('ul>li>').each( function() {
         var val = $(this).text();
         $(this).text("Page " + val); 
-        });
     });
+
+    $('a:contains("Filtre")').html('Filtrer/ Trier <span class="caret"></span>');
 });
 
 </script>
