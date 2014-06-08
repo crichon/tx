@@ -155,6 +155,7 @@ class ItemForms(forms.ModelForm):
 
         if not self.cleaned_data['for_user']:
             self.cleaned_data['for_user'] = User.objects.get(username__startswith=u'tous')
+
         if u'item' in self.cleaned_data and self.cleaned_data['item'] in order.items.all():
             msg = u'%s est déjà dans la facture courante, veuillez sélectionnez un autre produit' \
                     % self.cleaned_data['item']
@@ -165,10 +166,12 @@ class ItemForms(forms.ModelForm):
 class OrderItemsAdmin(admin.ModelAdmin):
     """ Handles Items addition and actions"""
 
-    list_per_page = 50
     form = ItemForms
-    list_display = (u'my_item', u'item__quantity', u'item__supplier', u'needed', u'state', u'order_data', u'for_user')
+
+    list_per_page = 50
+    list_display = (u'my_item', 'item__quantity', u'item__supplier', u'needed', u'state', u'order_data', u'for_user')
     list_display_links = None
+
     search_fields = (u'for_user__username', u'item__name',)
     list_filter = (u'for_user', 'state', u'order_data')
     preserve_filters = True
@@ -187,7 +190,7 @@ class OrderItemsAdmin(admin.ModelAdmin):
 
     def item__supplier(self, instance):
         return instance.item.supplier.name
-    item__quantity.short_description = u'Fournisseur'
+    item__supplier.short_description = u'Fournisseur'
 
     def changelist_view(self, request, extra_context = None):
         """ set current order as default filter
@@ -199,6 +202,7 @@ class OrderItemsAdmin(admin.ModelAdmin):
                 current_order_id = Order.objects.get(state__startswith=Order.CURRENT).id
                 return HttpResponseRedirect(u'/admin/main/orderitems/?order_data__id__exact=' + str(current_order_id))
         return super(OrderItemsAdmin, self).changelist_view(request, extra_context=extra_context)
+
 
     def get_form(self, request, obj=None, **kwargs):
         self.exclude = []
