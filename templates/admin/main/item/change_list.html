@@ -8,10 +8,10 @@
 
 // should be checked on the server side too
 $(document).ready(function(){
-    $('.field-out_stock').each( function() {
-        var val = parseInt($(this).parent().find('.field-in_stock').text());
+    $('.vIntegerField').each( function() {
+        var val = parseInt($(this).val());
         console.log(val);
-        $(this).parent().find('.vIntegerField').spinner({
+        $(this).spinner({
             step: 1,
             min: 0,
             max: val,

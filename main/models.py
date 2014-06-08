@@ -36,8 +36,7 @@ class Item(models.Model):
     quantity = models.CharField(u'quantité par unité de vente', max_length=50)
     place = models.CharField(u'lieu de stockage', max_length=50)
     stockage_modality = models.CharField(u'modalité de stockage', max_length=50, null=True, blank=True)
-    in_stock = models.IntegerField(verbose_name=u'Quantité achetée', default=0)
-    out_stock = models.IntegerField(verbose_name=u'Quantité utilisée', default=0)
+    current_stock = models.IntegerField(verbose_name=u'Quantité en stock', default=0)
 
     class Meta:
         verbose_name = u'produit'
@@ -129,7 +128,7 @@ class OrderItems(models.Model):
             self.order_data.save()
 
         if self.state == self.DONE:
-            self.item.in_stock += self.needed
+            self.item.current_stock += self.needed
             self.item.save()
 
 

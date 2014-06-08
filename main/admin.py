@@ -345,16 +345,12 @@ class OrderItemsAdmin(admin.ModelAdmin):
 class ItemAdmin(admin.ModelAdmin):
     list_per_page = 50
     list_display = (u'name', u'ref', u'quantity', u'stockage_modality',
-            u'category', u'supplier', u'in_stock', u'out_stock', u'current', )
+            u'category', u'supplier', u'current_stock', )
     list_filter = (u'category', u'supplier',)
     search_fields = (u'name', u'category__name', u'supplier__name',)
-    list_editable = (u'out_stock', )
-    readonly_fields = (u'in_stock', u'out_stock', u'current', )
+    list_editable = (u'current_stock', )
+    readonly_fields = (u'current_stock', )
 
-    def current(self, instance):
-        return instance.in_stock - instance.out_stock
-    #current.allow_tags=True
-    current.short_description = u'en stock, par unité de vente'
 
 class SupplierAdmin(admin.ModelAdmin):
     list_per_page = 50
