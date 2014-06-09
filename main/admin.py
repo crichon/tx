@@ -184,13 +184,19 @@ class OrderItemsAdmin(admin.ModelAdmin):
     my_item.allow_tags=True
     my_item.short_description = u'Commande'
 
+
     def item__quantity(self, instance):
         return instance.item.quantity
     item__quantity.short_description = u'Quantitée par lot'
 
+
     def item__supplier(self, instance):
         return instance.item.supplier.name
     item__supplier.short_description = u'Fournisseur'
+
+    def categories(self, instance):
+        cat = [x.name for x in Category.objects.all()]
+        return ",".join(cat)
 
     def changelist_view(self, request, extra_context = None):
         """ set current order as default filter
@@ -210,6 +216,7 @@ class OrderItemsAdmin(admin.ModelAdmin):
         if obj == None:
             self.exclude.append(u'order_data')
             self.exclude.append(u'state')
+            self.readonly_fields.append(u'categories')
         else:
             self.readonly_fields.append(u'order_data')
             self.readonly_fields.append(u'item')

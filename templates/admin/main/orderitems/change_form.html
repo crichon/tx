@@ -1,0 +1,50 @@
+{% extends "admin/change_form.html" %}
+{% load i18n admin_urls admin_static admin_modify %}
+
+{% block extrastyle %}{{ block.super }}<link rel="stylesheet" type="text/css" href="{% static "admin/css/forms.css" %}" />
+
+{% endblock %}
+
+{% block after_related_objects %}
+
+<script type="text/javascript">
+
+// Dirty ui quick fix
+    
+    var categories = $('.field-categories').find('p').text().split(',');
+    list_categories = '<select id="categories_container"><option value="None">------</option>';
+    categories.forEach( function(item){ 
+        list_categories += '<option value="' + item + '" >' + item + '</option>'; });
+    list_categories += '</select>';
+    $('.field-categories').find('p').html(list_categories);
+    $('#categories_container').select2({ "width": "250px"});
+    $('#categories_container').on("change", filter_object);
+
+    data = [];
+    $('#id_item > option').each(function() { 
+            data.push({ 'id': this.val, 'text': this.text }); 
+    });
+
+    function filter_object(e) { 
+        var new_filter = e.val;
+        filtered_data = [];
+
+        if ( new_filter !== "None" ){
+            data.forEach( function(item) {
+                if (item['text'].indexOf(new_filter) > -1){ 
+                    filtered_data.push(item);
+                }
+            });
+        }else { filtered_data = data; }
+
+        $('#id_item').select2('destroy');
+        new_options = '<option value="None">------</option>';
+        filtered_data.forEach( function(item) { new_options += '<option val="' + item['val'] + '" >' + item['text'] + '</option>'; });
+        $('#id_item').html(new_options);
+        $('#id_item').select2({ "width": "250px"});
+    }
+
+
+</script>
+{% endblock %}
+

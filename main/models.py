@@ -44,7 +44,7 @@ class Item(models.Model):
 
 
     def __unicode__(self):
-        return self.name  + u', ref: ' + self.ref
+        return self.name  + u', ref: ' + self.ref + u' (' + self.category.name + u')'
 
 
 class Order(models.Model):
