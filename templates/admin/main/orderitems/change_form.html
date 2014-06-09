@@ -10,6 +10,9 @@
 <script type="text/javascript">
 
 // Dirty ui quick fix
+// made me sick to write that kind of bullshit
+// filter item select options depending on the selected category
+
     
     var categories = $('.field-categories').find('p').text().split(',');
     list_categories = '<select id="categories_container"><option value="None">------</option>';
@@ -22,7 +25,7 @@
 
     data = [];
     $('#id_item > option').each(function() { 
-            data.push({ 'id': this.val, 'text': this.text }); 
+            data.push({ 'id': this.value, 'text': this.text }); 
     });
 
     function filter_object(e) { 
@@ -39,12 +42,24 @@
 
         $('#id_item').select2('destroy');
         new_options = '<option value="None">------</option>';
-        filtered_data.forEach( function(item) { new_options += '<option val="' + item['val'] + '" >' + item['text'] + '</option>'; });
+        filtered_data.forEach( function(item) {
+                new_options += '<option value="' + item['id'] + '" >' + item['text'] + '</option>'; });
         $('#id_item').html(new_options);
         $('#id_item').select2({ "width": "250px"});
     }
 
+// on item change call the api to retrieve item supplier and quantity by batch 
 
+    $('#id_item').on("change", update_info);
+
+    function update_info(e) { 
+        $.getJSON('/api/item/' + e.val + '/?format=json', function(data){
+            $('.field-item__quantity').find ('p').text(data['quantity']);
+            $('.field-item__supplier').find ('p').text(data['supplier']['name']);
+
+            console.log(e);
+        });
+    }
 </script>
 {% endblock %}
 
