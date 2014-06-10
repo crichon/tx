@@ -2,7 +2,7 @@ from django.contrib.auth.models import User, Group
 from django.shortcuts import render
 from django.http import HttpResponse
 
-from main.models import Item, Supplier, Category
+from gestion_produits.models import Item, Supplier, Category
 from  xlrd import open_workbook
 
 

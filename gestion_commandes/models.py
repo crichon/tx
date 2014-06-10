@@ -1,50 +1,9 @@
 # -*- coding: utf8 -*-
+from gestion_produits.models import Item
 from django.db import models
 from django.contrib.auth.models import User
 
 from datetime import datetime
-
-class Category(models.Model):
-    name = models.CharField(u'categorie', max_length=50)
-
-    class Meta:
-        verbose_name = u'Catégorie'
-        ordering = ["name"]
-
-    def __unicode__(self):
-        return self.name
-
-
-class Supplier(models.Model):
-    adress = models.CharField(u'adresse', max_length=50)
-    name = models.CharField(u'nom', max_length=50)
-    website = models.CharField(u'site web/catalogue', max_length=50, null=True, blank=True)
-
-    class Meta:
-        verbose_name = u'Fournisseur'
-        ordering = ["name"]
-
-    def __unicode__(self):
-        return self.name
-
-
-class Item(models.Model):
-    category = models.ForeignKey(Category, null=True, blank=True, verbose_name=u'Catégories')
-    supplier = models.ForeignKey(Supplier, verbose_name=u'Fournisseur')
-    ref = models.CharField(u'référence', max_length=50)
-    name = models.CharField(u'identifiant', max_length=50)
-    quantity = models.CharField(u'quantité par unité de vente', max_length=50)
-    place = models.CharField(u'lieu de stockage', max_length=50)
-    stockage_modality = models.CharField(u'modalité de stockage', max_length=50, null=True, blank=True)
-    current_stock = models.IntegerField(verbose_name=u'Quantité en stock', default=0)
-
-    class Meta:
-        verbose_name = u'produit'
-        ordering = ["name"]
-
-
-    def __unicode__(self):
-        return self.name  + u', ref: ' + self.ref + u' (' + self.category.name + u')'
 
 
 class Order(models.Model):
@@ -53,14 +12,12 @@ class Order(models.Model):
     DONE = u'D'
     CANCELED = u'CA'
     WAITING = u'W'
-#    GET = u'G'
 
     ORDER_STATE = (
             (CURRENT, u'en cours'),
             (DONE, u'archivée'),
             (CANCELED, u'annulée'),
             (WAITING, u'en attente de réception'),
-            #(GET, u'reçue'),
     )
 
     items = models.ManyToManyField(Item, through='OrderItems')
@@ -69,9 +26,11 @@ class Order(models.Model):
     order_date = models.DateField(u'date d\'envoie', null=True, blank=True)
     completion_date = models.DateField(u'Date d\'archivage', null=True, blank=True)
 
+
     def items_count(self):
         return self.orderitems_set.count()
     items_count.short_description = u'Nombres d\'objets'
+
 
     def __unicode__(self):
         return 'commande du ' + self.create_date.strftime('%d/%m/%Y') + u', ' + self.get_state_display()
