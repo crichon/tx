@@ -1,9 +1,12 @@
 # -*- coding: utf8 -*-
 from django.contrib import admin
+from django import forms
 
 from easy_select2 import select2_modelform_meta
 from gestion_produits.models import *
 
+class ItemForm(forms.ModelForm):
+    Meta = select2_modelform_meta(Item)
 
 class ItemAdmin(admin.ModelAdmin):
     list_per_page = 50
@@ -13,6 +16,7 @@ class ItemAdmin(admin.ModelAdmin):
     search_fields = (u'name', u'category__name', u'supplier__name',)
     list_editable = (u'current_stock', )
     readonly_fields = (u'current_stock', )
+    form = ItemForm
 
 
 class SupplierAdmin(admin.ModelAdmin):
