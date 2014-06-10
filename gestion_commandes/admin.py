@@ -8,6 +8,7 @@ from django import forms
 
 from easy_select2 import select2_modelform_meta
 from gestion_commandes.models import *
+from gestion_produits.models import *
 from datetime import datetime
 
 import time
@@ -35,7 +36,6 @@ def export_xls(ModelAdmin, request, queryset):
     wb = xlwt.Workbook(encoding='utf-8')
 
     suppliers = Supplier.objects.all()
-    #For each supplier create sheet
     for order in queryset:
         for supp in suppliers:
             if order.items.filter(supplier__name=supp.name):
@@ -44,12 +44,9 @@ def export_xls(ModelAdmin, request, queryset):
 
                 row_num = 0
                 columns = (
-                        #(u"Type de produit", 5000),
                         (u"Identification", 12000),
-                        #(u"Volume/Qté", 5000),
                         (u"Référence", 5000),
                         (u"Quantitée", 5000),
-                        #(u"Fournisseur", 5000),
                         )
                 font_style = xlwt.XFStyle()
                 font_style.font.bold = True
@@ -94,6 +91,7 @@ class OrderAdmin(admin.ModelAdmin):
         if not request.user.is_superuser:
             del actions[u'delete_selected']
         return actions
+
 
     def get_form(self, request, obj=None, **kwargs):
         """ Handle the choice given to the administator on the state's choices
@@ -194,9 +192,11 @@ class OrderItemsAdmin(admin.ModelAdmin):
         return instance.item.supplier.name
     item__supplier.short_description = u'Fournisseur'
 
+
     def categories(self, instance):
         cat = [x.name for x in Category.objects.all()]
         return ",".join(cat)
+
 
     def changelist_view(self, request, extra_context = None):
         """ set current order as default filter
@@ -214,11 +214,29 @@ class OrderItemsAdmin(admin.ModelAdmin):
     def get_form(self, request, obj=None, **kwargs):
         self.exclude = []
         self.readonly_fields = []
+
         if obj == None:
+            self.fieldsets = (
+                (u'Produits', {
+                    'fields': (u'categories', u'item', u'item__quantity', u'item__supplier')
+                }),
+                (u'Commmandes', {
+                    'fields': (u'for_user', u'needed')
+                }),
+            );
             self.exclude.append(u'order_data')
             self.exclude.append(u'state')
             self.readonly_fields.append(u'categories')
+
         else:
+            self.fieldsets = (
+                (u'Champs édiatbles', {
+                    'fields': (u'needed', u'for_user')
+                }),
+                (u'Informations', {
+                    'fields': (u'order_data', u'item', u'item__quantity', u'item__supplier', u'state')
+                }),
+            );
             self.readonly_fields.append(u'order_data')
             self.readonly_fields.append(u'item')
             self.readonly_fields.append(u'state')
@@ -250,6 +268,7 @@ class OrderItemsAdmin(admin.ModelAdmin):
             obj.state = OrderItems.CURRENT
         obj.save()
 
+
     def copy_items(self, request, queryset):
         """ copy selected items to current order """
         current_order = Order.objects.get(state__startswith=Order.CURRENT)
@@ -269,6 +288,7 @@ class OrderItemsAdmin(admin.ModelAdmin):
                 item.save()
                 i += 1
         self.message_user(request, u'%d objets ajouté(s)' %i)
+
 
     def mark_as_stock(self, request, queryset):
         i = 0
@@ -346,7 +366,6 @@ class OrderItemsAdmin(admin.ModelAdmin):
             del actions['mark_as_canceled']
             del actions['mark_as_missing']
         return actions
-
 
     actions = [u'copy_items', u'mark_as_stock', u'mark_as_missing', u'mark_as_get', u'mark_as_canceled']
     copy_items.short_description = u'copier vers la commande en cours'
