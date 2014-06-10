@@ -7,7 +7,7 @@ from django.http import HttpResponse, HttpResponseRedirect
 from django import forms
 
 from easy_select2 import select2_modelform_meta
-from main.models import *
+from gestion_commandes.models import *
 from datetime import datetime
 
 import time
@@ -206,7 +206,8 @@ class OrderItemsAdmin(admin.ModelAdmin):
         if test[-1] and not test[-1].startswith(u'?'):
             if u'order_data__id__exact' not in request.GET:
                 current_order_id = Order.objects.get(state__startswith=Order.CURRENT).id
-                return HttpResponseRedirect(u'/admin/main/orderitems/?order_data__id__exact=' + str(current_order_id))
+                # Should use reverse url instead of hardcoding it
+                return HttpResponseRedirect(u'/admin/gestion_commandes/orderitems/?order_data__id__exact=' + str(current_order_id))
         return super(OrderItemsAdmin, self).changelist_view(request, extra_context=extra_context)
 
 
@@ -355,23 +356,6 @@ class OrderItemsAdmin(admin.ModelAdmin):
     mark_as_get.short_description = u'marquer comme reçues'
 
 
-class ItemAdmin(admin.ModelAdmin):
-    list_per_page = 50
-    list_display = (u'name', u'ref', u'quantity', u'stockage_modality',
-            u'category', u'supplier', u'current_stock', )
-    list_filter = (u'category', u'supplier',)
-    search_fields = (u'name', u'category__name', u'supplier__name',)
-    list_editable = (u'current_stock', )
-    readonly_fields = (u'current_stock', )
-
-
-class SupplierAdmin(admin.ModelAdmin):
-    list_per_page = 50
-    list_display = (u'name', u'website', u'adress',)
-    list_filter = (u'name', u'website', u'adress',)
-    search_fields = (u'name', u'website', u'adress',)
-
-
 from django.contrib.admin.models import LogEntry, DELETION
 from django.utils.html import escape
 from django.core.urlresolvers import reverse
@@ -438,8 +422,5 @@ class LogEntryAdmin(admin.ModelAdmin):
 
 
 admin.site.register(LogEntry, LogEntryAdmin)
-admin.site.register(Category)
-admin.site.register(Supplier, SupplierAdmin)
-admin.site.register(Item, ItemAdmin)
 admin.site.register(Order, OrderAdmin)
 admin.site.register(OrderItems, OrderItemsAdmin)

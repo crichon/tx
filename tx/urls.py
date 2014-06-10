@@ -1,6 +1,6 @@
 from django.conf.urls import patterns, include, url
-from main import views
-from main.api import ItemResource
+from gestion_produits import views
+from gestion_produits.api import ItemResource
 
 item_resource = ItemResource()
 
