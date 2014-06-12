@@ -14,7 +14,7 @@ class Category(models.Model):
 
 
 class Supplier(models.Model):
-    adress = models.CharField(u'adresse', max_length=50)
+    adress = models.CharField(u'adresse', max_length=100)
     name = models.CharField(u'nom', max_length=50)
     website = models.CharField(u'site web/catalogue', max_length=50, null=True, blank=True)
 

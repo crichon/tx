@@ -171,7 +171,7 @@ class OrderItemsAdmin(admin.ModelAdmin):
     list_display_links = None
 
     search_fields = (u'for_user__username', u'item__name',)
-    list_filter = (u'for_user', 'state', u'order_data')
+    list_filter = (u'for_user', 'state', u'order_data', u'item__supplier')
     preserve_filters = True
 
 
@@ -230,7 +230,7 @@ class OrderItemsAdmin(admin.ModelAdmin):
 
         else:
             self.fieldsets = (
-                (u'Champs édiatbles', {
+                (u'Champs éditables', {
                     'fields': (u'needed', u'for_user')
                 }),
                 (u'Informations', {
@@ -359,12 +359,11 @@ class OrderItemsAdmin(admin.ModelAdmin):
                 del actions[u'mark_as_get']
                 del actions[u'mark_as_stock']
 
-        if u'responsables commandes' == request.user.groups.all()[0].name \
+            if u'responsables commandes' == request.user.groups.all()[0].name \
                 and order.state == Order.WAITING:
-                    pass
-        else:
-            del actions['mark_as_canceled']
-            del actions['mark_as_missing']
+                   return actions
+        del actions['mark_as_canceled']
+        del actions['mark_as_missing']
         return actions
 
     actions = [u'copy_items', u'mark_as_stock', u'mark_as_missing', u'mark_as_get', u'mark_as_canceled']
