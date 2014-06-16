@@ -1,5 +1,5 @@
 {% extends "admin/change_list.html" %}
-{% load i18n admin_urls admin_static admin_modify %}
+{% load i18n admin_urls admin_static admin_list %}
 
 {% block extrahead %}{{ block.super }}
 <script src="//code.jquery.com/ui/1.10.4/jquery-ui.js"></script>
@@ -30,3 +30,18 @@ $(document).ready(function(){
 </script>
 {{ media }}
 {% endblock %}
+{% block content_title%}
+
+<h4 style="text-align: center;">
+Cliquez sur un produit pour le modifier 
+</h4>
+{% endblock %}
+{% block object-tools-items %}
+<li>
+{% url cl.opts|admin_urlname:'add' as add_url %}
+<a href="{% add_preserved_filters add_url is_popup to_field %}" style="float=left;" class="addlink btn btn-primary default">
+	Ajouter un Produit
+</a>
+</li>
+{% endblock %}
+
