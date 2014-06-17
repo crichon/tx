@@ -46,7 +46,7 @@ def export_xls(ModelAdmin, request, queryset):
                 columns = (
                         (u"Identification", 12000),
                         (u"Référence", 5000),
-                        (u"Quantitée", 5000),
+                        (u"Quantité", 5000),
                         )
                 font_style = xlwt.XFStyle()
                 font_style.font.bold = True
@@ -185,7 +185,7 @@ class OrderItemsAdmin(admin.ModelAdmin):
 
     def item__quantity(self, instance):
         return instance.item.quantity
-    item__quantity.short_description = u'Quantitée par lot'
+    item__quantity.short_description = u'Quantité par lot'
 
 
     def item__supplier(self, instance):
