@@ -20,7 +20,6 @@ ORDER_CURRENT = (Order.ORDER_STATE[2], Order.ORDER_STATE[3])
 def create_xls(obj):
     pass
 
-
 def export_xls(ModelAdmin, request, queryset):
     """produce x file per order given in the queryset
     files are given "date_supplier.xls" name
@@ -31,8 +30,10 @@ def export_xls(ModelAdmin, request, queryset):
     argh, don't know what's going on, should work, fucking lib
     """
 
-    response = HttpResponse(mimetype='application/ms-excel')
-    response[u'Content-Disposition'] = u'attachment; filename=commande_' + time.strftime("%d/%m/%Y") + u'.xls'
+    response = HttpResponse()
+
+    #response[u'Content-Disposition'] = u'attachment; filename=commande_' + time.strftime("%d/%m/%Y") + u'.xls'
+    f = open('/tmp/commande_' + time.strftime("%d-%m-%Y") + '.xls', 'w')
     wb = xlwt.Workbook(encoding='utf-8')
 
     suppliers = Supplier.objects.all()
@@ -70,15 +71,17 @@ def export_xls(ModelAdmin, request, queryset):
                           )
                     for col_num in xrange(len(row)):
                         ws.write(row_num, col_num, row[col_num], font_style)
-                wb.save(response)
+                wb.save(f)
     return response
 export_xls.short_description = u"Export XLS"
+
 
 
 class OrderFormCurrent(forms.ModelForm):
     def __init__(self,  *args, **kwargs):
         super(OrderFormCurrent, self).__init__(*args, **kwargs)
         self.fields[u'state'] = forms.ChoiceField(choices=ORDER_CURRENT)
+
 
 
 class OrderAdmin(admin.ModelAdmin):
