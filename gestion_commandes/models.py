@@ -5,6 +5,7 @@ from django.contrib.auth.models import User
 
 from datetime import datetime
 
+import xlwt
 
 class Order(models.Model):
 
@@ -25,6 +26,15 @@ class Order(models.Model):
     create_date = models.DateField(u'date de création', auto_now_add=True)
     order_date = models.DateField(u'date d\'envoie', null=True, blank=True)
     completion_date = models.DateField(u'Date d\'archivage', null=True, blank=True)
+
+#Trigger :xls generation and email
+    def save(self, *args, **kwargs):
+        if getattr(self, 'state', WAITING):
+           files=xls_generation()
+           send_mail("matthieu.hanne@gmail.com", "patrick.paullier@utc.fr", "Commande - ", "Ci-joint les commandes", files)
+        super(Model, self).save(*args, **kwargs)
+
+
 
 
     def items_count(self):
