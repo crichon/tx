@@ -33,13 +33,13 @@ def export_xls(ModelAdmin, request, queryset):
     response = HttpResponse()
 
     #response[u'Content-Disposition'] = u'attachment; filename=commande_' + time.strftime("%d/%m/%Y") + u'.xls'
-    f = open('/tmp/commande_' + time.strftime("%d-%m-%Y") + '.xls', 'w')
-    wb = xlwt.Workbook(encoding='utf-8')
 
     suppliers = Supplier.objects.all()
     for order in queryset:
         for supp in suppliers:
             if order.items.filter(supplier__name=supp.name):
+                f = open('/tmp/commande_' + time.strftime("%d-%m-%Y") + supp.name + '.xls', 'w')
+                wb = xlwt.Workbook(encoding='utf-8')
 
                 ws = wb.add_sheet(supp.name)
 
