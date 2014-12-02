@@ -1,4 +1,5 @@
 # -*- coding: utf8 -*-
+import smtplib
 from django.core.exceptions import ObjectDoesNotExist
 from django.contrib.auth.models import Group
 from django.core.mail import send_mail, EmailMessage
@@ -39,7 +40,7 @@ def export_xls(ModelAdmin, request, queryset):
         for supp in suppliers:
             if order.items.filter(supplier__name=supp.name):
                 f = open('/tmp/commande_' + time.strftime("%d-%m-%Y") + supp.name + '.xls', 'w')
-                files.append(f)
+                files.append(f.name)
                 wb = xlwt.Workbook(encoding='utf-8')
 
                 ws = wb.add_sheet(supp.name)
@@ -74,9 +75,12 @@ def export_xls(ModelAdmin, request, queryset):
                         ws.write(row_num, col_num, row[col_num], font_style)
                         print col_num
                 wb.save(f)
-    email = EmailMessage('commande_' + time.strftime("%d-%m-%Y") + '.xls', 'Ci-joint les fichiers par fournisseur', 'matthieu.hanne@gmail.com',['patrick.paullier@utc.fr'],headers={'Message-ID': ''+time.strftime("%d-%m-%Y")})
+    email = EmailMessage('commande_' + time.strftime("%d-%m-%Y") + '.xls', 'Ci-joint les fichiers par fournisseur', 'richon.c@gmail.com',['github@crichon.eu'],headers={'Message-ID': ''+time.strftime("%d-%m-%Y")})
     for file_xls in files:
-        email.attach(file_xls.name, file_xls, 'application/vnd.ms-excel')
+        f = open(file_xls, 'r')
+        email.attach(file_xls, f.read(), 'application/vnd.ms-excel')
+        f.close()
+    server = smtplib.SMTP('smtp.gmail.com:587')
     email.send()
     return response
 export_xls.short_description = u"Export XLS"
