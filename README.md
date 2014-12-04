@@ -41,28 +41,3 @@ Vue publique
 ------------
 
 Si temps, voir du coté de d3.js pour faire des visualisations sur les consommations du labo
-
-Qui serait éventuellement
--------------------------
-
-Gérer les prix, le labo n'est pas intéresser donc ...
-Gestion des stocks:
- - liée une table stock_history à item, conetenat une date de modification et la valeur du stock
- - override item.on_save afin de logger toutes modifications du stock
-
-Todo 
---------------------------------------------
-dsl écris suite à une session code...
-
-Merci taskwarrior ;)
-
-
-    ID Proj Pri Due        Age Urg  Description
-    -- ---- --- ---------- --- ---- ---------------------------------------------
-    34 tx   L   2014-04-24 10d 10.3 mail 5000 python host
-    39 tx   L   2014-04-24 10d 10.3 think about database backup and license
-    52 tx       2014-04-21 1d   9.5 create doc and user guide
-    50 tx   M              1d  4.91 split admin code in utils and action at least
-    53 tx                  1d  1.01 override some msg in english to french
-    54 tx                  6s     1 fix xls or rethink it
-
