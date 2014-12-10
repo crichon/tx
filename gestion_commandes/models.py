@@ -27,15 +27,6 @@ class Order(models.Model):
     order_date = models.DateField(u'date d\'envoie', null=True, blank=True)
     completion_date = models.DateField(u'Date d\'archivage', null=True, blank=True)
 
-#Trigger :xls generation and email
-    def save(self, *args, **kwargs):
-        if getattr(self, 'state', WAITING):
-           files=xls_generation()
-           send_mail("matthieu.hanne@gmail.com", "patrick.paullier@utc.fr", "Commande - ", "Ci-joint les commandes", files)
-        super(Model, self).save(*args, **kwargs)
-
-
-
 
     def items_count(self):
         return self.orderitems_set.count()
