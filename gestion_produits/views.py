@@ -33,6 +33,7 @@ def importItem(file_path):
             #Hydratation Item
             item_name = r_sheet.cell(row_index, 1).value
             item_ref = current_supplier= r_sheet.cell(row_index, 3).value
-            item, created = Item.objects.get_or_create(ref=item_ref, name=item_name, category=item_category, supplier=item_supplier)
+            item_quantity = r_sheet.cell(row_index, 2).value
+            item, created = Item.objects.get_or_create(ref=item_ref, name=item_name, category=item_category, supplier=item_supplier, quantity=item_quantity)
 
 
