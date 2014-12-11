@@ -45,7 +45,7 @@ def export_xls(ModelAdmin, request, queryset):
 
                 ws = wb.add_sheet(supp.name)
 
-                row_num = 0
+                row_num = 2
                 columns = (
                         (u"Identification", 12000),
                         (u"Référence", 5000),
@@ -53,8 +53,9 @@ def export_xls(ModelAdmin, request, queryset):
                         )
                 font_style = xlwt.XFStyle()
                 font_style.font.bold = True
+                ws.write(0, 0, columns[col_num][0], supp.name, font_style)
                 #Set titles
-                for col_num in xrange(len(columns)):
+                for col_num in xrange(2, len(columns) + 2):
                     ws.write(row_num, col_num, columns[col_num][0], font_style)
                     # set column width
                     ws.col(col_num).width = columns[col_num][1]
@@ -75,7 +76,7 @@ def export_xls(ModelAdmin, request, queryset):
                         ws.write(row_num, col_num, row[col_num], font_style)
                         print col_num
                 wb.save(f)
-    email = EmailMessage('commande_' + time.strftime("%d-%m-%Y") + '.xls', 'Ci-joint les fichiers par fournisseur', 'richon.c@gmail.com',['github@crichon.eu'],headers={'Message-ID': ''+time.strftime("%d-%m-%Y")})
+    email = EmailMessage('commande_' + time.strftime("%d-%m-%Y") + '.xls', 'Ci-joint les fichiers par fournisseur', 'commande-c2b.bmbi@utc.fr',['patrick.paullier@utc.fr '],headers={'Message-ID': ''+time.strftime("%d-%m-%Y")})
     for file_xls in files:
         f = open(file_xls, 'r')
         email.attach(file_xls, f.read(), 'application/vnd.ms-excel')
@@ -334,12 +335,12 @@ class OrderItemsAdmin(admin.ModelAdmin):
                 obj.state = OrderItems.CANCELED
                 obj.save()
                 i += 1
-                send_mail(u'Commande anulée',\
-                        u'La commande de ' + obj.item.__unicode__() + u' a été anulée', request.user.email, \
+                email = EmailMessage(u'Commande anulée',\
+                        u'La commande de ' + obj.item.__unicode__() + u' a été anulée', 'commande-c2b.bmbi@utc.fr',
                         [obj.for_user.email] if obj.for_user.username != u'tous' else\
-                        [user.email for user in Group.objects.get(name__startswith=u'utilisateur').user_set.all()]\
-                        , fail_silently=False
-                )
+                        [user.email for user in Group.objects.get(name__startswith=u'utilisateur').user_set.all()],
+                        headers={'Message-ID': ''+time.strftime("%d-%m-%Y")})
+                email.send()
             else:
                 self.message_user(request, u'%s n\'est pas dans une commande non traitée' % obj.item, u'error')
         self.message_user(request, u'%d objet(s) annulée(s)' % i)
@@ -352,11 +353,15 @@ class OrderItemsAdmin(admin.ModelAdmin):
                 obj.state = OrderItems.GET
                 obj.save()
                 i += 1
+                email = EmailMessage(u'Commande reçue',\
+                        u'La commande de ' + obj.item.__unicode__() + u' a été reçue', 'commande-c2b.bmbi@utc.fr',
+                        [obj.for_user.email] if obj.for_user.username != u'tous' else\
+                        [user.email for user in Group.objects.get(name__startswith=u'utilisateur').user_set.all()],
+                        headers={'Message-ID': ''+time.strftime("%d-%m-%Y")})
+                email.send()
             else:
                 self.message_user(request, u'%s n\'est pas en attente de réception' % obj.item, u'error')
         self.message_user(request, u'%d objet reçue(s)' % i)
-
-    copy_items.short_description = u'copier vers la commande en cours'
 
 
     def get_actions(self, request):

@@ -24,7 +24,7 @@ class Order(models.Model):
     items = models.ManyToManyField(Item, through='OrderItems')
     state = models.CharField(u'état', max_length=50, choices=ORDER_STATE, default=CURRENT)
     create_date = models.DateField(u'date de création', auto_now_add=True)
-    order_date = models.DateField(u'date d\'envoie', null=True, blank=True)
+    order_date = models.DateField(u'date d\'envoi', null=True, blank=True)
     completion_date = models.DateField(u'Date d\'archivage', null=True, blank=True)
 
 
