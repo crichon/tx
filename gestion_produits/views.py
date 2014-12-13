@@ -1,18 +1,18 @@
 from django.contrib.auth.models import User, Group
 from django.shortcuts import render
-from django.http import HttpResponse
+from django.http import HttpResponseRedirect, HttpResponse
 
 from gestion_produits.models import Item, Supplier, Category
 from  xlrd import open_workbook
 
 
 def index(request):
-	return HttpResponse("Soon available")
+	return HttpResponseRedirect("/admin")
 
 def toolbox(request):
-	#TODO: get downloaded in toolbox
-	importItem('./listeProduits.xlsx')
-	return HttpResponse("Initialisation terminee")
+        #TODO: get downloaded in toolbox
+        importItem('./listeProduits.xlsx')
+        return HttpResponse("Initialisation terminee")
 
 def importItem(file_path):
     """ Initialize product table from an xls file"""

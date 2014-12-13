@@ -24,16 +24,9 @@ def create_xls(obj):
 def export_xls(ModelAdmin, request, queryset):
     """produce x file per order given in the queryset
     files are given "date_supplier.xls" name
-
-    ugly and sub-optimise but well, their is deadline
-    Also order won't be huge, so it's not a big deal !
-
-    argh, don't know what's going on, should work, fucking lib
     """
 
-    response = HttpResponse()
     files = []
-    #response[u'Content-Disposition'] = u'attachment; filename=commande_' + time.strftime("%d/%m/%Y") + u'.xls'
 
     suppliers = Supplier.objects.all()
     for order in queryset:
@@ -53,9 +46,8 @@ def export_xls(ModelAdmin, request, queryset):
                         )
                 font_style = xlwt.XFStyle()
                 font_style.font.bold = True
-                ws.write(0, 0, columns[col_num][0], supp.name, font_style)
                 #Set titles
-                for col_num in xrange(2, len(columns) + 2):
+                for col_num in xrange(len(columns)):
                     ws.write(row_num, col_num, columns[col_num][0], font_style)
                     # set column width
                     ws.col(col_num).width = columns[col_num][1]
@@ -63,14 +55,14 @@ def export_xls(ModelAdmin, request, queryset):
                 font_style = xlwt.XFStyle()
                 font_style.alignment.wrap = 1
 
+                ws.write(0, 0, supp.name, font_style)
+
                 for obj in order.orderitems_set.filter(item__supplier__name=supp.name):
                     row_num += 1
                     row = (
-                            #obj.item.category.name,
                             obj.item.name,
                             obj.item.ref,
                             obj.needed,
-                            #obj.item.supplier.name,
                           )
                     for col_num in xrange(len(row)):
                         ws.write(row_num, col_num, row[col_num], font_style)
@@ -83,7 +75,8 @@ def export_xls(ModelAdmin, request, queryset):
         f.close()
     server = smtplib.SMTP('smtp.gmail.com:587')
     email.send()
-    return response
+    ModelAdmin.message_user(request, 'mail envoyé')
+    #HttpResponseRedirect("/admin")
 export_xls.short_description = u"Export XLS"
 
 
@@ -353,6 +346,9 @@ class OrderItemsAdmin(admin.ModelAdmin):
                 obj.state = OrderItems.GET
                 obj.save()
                 i += 1
+                #print obj.for_suer.email
+                print [obj.for_user.email] if obj.for_user.username != u'tous' else\
+                [user.email for user in Group.objects.get(name__startswith=u'utilisateur').user_set.all()]
                 email = EmailMessage(u'Commande reçue',\
                         u'La commande de ' + obj.item.__unicode__() + u' a été reçue', 'commande-c2b.bmbi@utc.fr',
                         [obj.for_user.email] if obj.for_user.username != u'tous' else\
